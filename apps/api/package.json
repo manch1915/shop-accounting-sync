@@ -1,0 +1,48 @@
+{
+  "name": "@sas/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx watch --tsconfig tsconfig.json src/main.ts",
+    "start": "node dist/main.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prisma:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@nestjs/bullmq": "12.0.0",
+    "@nestjs/common": "12.2.0",
+    "@nestjs/core": "12.2.0",
+    "@nestjs/platform-express": "12.2.0",
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
+    "@sas/shared": "*",
+    "bullmq": "6.3.17",
+    "cookie-parser": "1.4.7",
+    "dotenv": "18.0.8",
+    "ioredis": "5.11.1",
+    "pg": "8.23.1",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "12.2.0",
+    "@swc/core": "1.16.18",
+    "@types/cookie-parser": "1.4.10",
+    "@types/express": "5.0.6",
+    "@types/node": "24.19.2",
+    "@types/pg": "8.15.6",
+    "@types/supertest": "7.2.1",
+    "msw": "3.0.3",
+    "prisma": "7.10.1",
+    "supertest": "7.3.1",
+    "tsx": "4.23.15",
+    "unplugin-swc": "2.0.0",
+    "vitest": "5.0.5"
+  }
+}

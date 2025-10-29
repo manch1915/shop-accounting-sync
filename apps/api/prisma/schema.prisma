@@ -1,0 +1,250 @@
+generator client {
+  provider               = "prisma-client"
+  output                 = "../src/generated/prisma"
+  runtime                = "nodejs"
+  moduleFormat           = "esm"
+  generatedFileExtension = "ts"
+  importFileExtension    = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Workspace {
+  id           String        @id @default(cuid())
+  name         String
+  createdAt    DateTime      @default(now())
+  users        User[]
+  connections  Connection[]
+  integrations Integration[]
+  alerts       Alert[]
+}
+
+model User {
+  id           String    @id @default(cuid())
+  workspaceId  String
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         String    @default("owner")
+  createdAt    DateTime  @default(now())
+}
+
+model Connection {
+  id             String    @id @default(cuid())
+  workspaceId    String
+  workspace      Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  provider       String
+  kind           String
+  name           String
+  baseUrl        String
+  authType       String
+  /// AES-256-GCM, see CredentialCipher
+  credentials    String
+  webhookSecret  String?
+  status         String    @default("active")
+  statusReason   String?
+  lastSyncAt     DateTime?
+  tokenExpiresAt DateTime?
+  settings       Json      @default("{}")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  storeIntegrations      Integration[]     @relation("store")
+  accountingIntegrations Integration[]     @relation("accounting")
+  webhookReceipts        WebhookReceipt[]
+  exchanges              HttpExchange[]
+
+  @@index([workspaceId])
+}
+
+model Integration {
+  id                     String     @id @default(cuid())
+  workspaceId            String
+  workspace              Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name                   String
+  storeConnectionId      String
+  store                  Connection @relation("store", fields: [storeConnectionId], references: [id])
+  accountingConnectionId String
+  accounting             Connection @relation("accounting", fields: [accountingConnectionId], references: [id])
+  flags                  Json
+  currency               String
+  reconcileEveryMin      Int        @default(15)
+  reconciledUntil        DateTime?
+  settings               Json       @default("{}")
+  createdAt              DateTime   @default(now())
+
+  operations      Operation[]
+  productMappings ProductMapping[]
+  valueMappings   ValueMapping[]
+  links           EntityLink[]
+  conflicts       Conflict[]
+
+  @@index([workspaceId])
+}
+
+model ProductMapping {
+  id                  String      @id @default(cuid())
+  integrationId       String
+  integration         Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  storeProductId      String
+  /// empty string when the product has no variants, keeps the unique index usable
+  storeVariantId      String      @default("")
+  storeSku            String
+  storeName           String
+  barcode             String?
+  accountingProductId String?
+  accountingName      String?
+  matchedBy           String?
+  lastStock           Int?
+  lastPriceMinor      Int?
+  updatedAt           DateTime    @updatedAt
+
+  @@unique([integrationId, storeProductId, storeVariantId])
+  @@index([integrationId, storeSku])
+  @@index([integrationId, accountingProductId])
+}
+
+model ValueMapping {
+  id            String      @id @default(cuid())
+  integrationId String
+  integration   Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  kind          String
+  source        String
+  sourceLabel   String
+  target        String?
+  targetLabel   String?
+
+  @@unique([integrationId, kind, source])
+}
+
+model EntityLink {
+  id            String      @id @default(cuid())
+  integrationId String
+  integration   Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  entity        String
+  storeId       String
+  accountingId  String
+  accountingUrl String?
+  /// hash of the exported payload, lets us skip re-sending unchanged orders
+  contentHash   String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([integrationId, entity, storeId])
+}
+
+model WebhookReceipt {
+  id           String     @id @default(cuid())
+  connectionId String
+  connection   Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  deliveryId   String
+  topic        String
+  receivedAt   DateTime   @default(now())
+
+  @@unique([connectionId, deliveryId])
+  @@index([receivedAt])
+}
+
+model Operation {
+  id            String      @id @default(cuid())
+  integrationId String
+  integration   Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  type          String
+  status        String      @default("queued")
+  subject       String
+  subjectRef    String?
+  dedupeKey     String      @unique
+  attempts      Int         @default(0)
+  maxAttempts   Int         @default(6)
+  durationMs    Int?
+  errorCode     String?
+  errorParams   Json?
+  errorDetail   String?
+  nextRetryAt   DateTime?
+  payload       Json        @default("{}")
+  result        Json?
+  conflictId    String?
+  conflict      Conflict?   @relation(fields: [conflictId], references: [id], onDelete: SetNull)
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  events    OperationEvent[]
+  exchanges HttpExchange[]
+
+  @@index([integrationId, createdAt])
+  @@index([status, updatedAt])
+  @@index([type, createdAt])
+  @@index([conflictId])
+}
+
+model OperationEvent {
+  id          String    @id @default(cuid())
+  operationId String
+  operation   Operation @relation(fields: [operationId], references: [id], onDelete: Cascade)
+  level       String
+  message     String
+  at          DateTime  @default(now())
+
+  @@index([operationId, at])
+}
+
+model HttpExchange {
+  id              String     @id @default(cuid())
+  operationId     String?
+  operation       Operation? @relation(fields: [operationId], references: [id], onDelete: Cascade)
+  connectionId    String
+  connection      Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  attempt         Int        @default(1)
+  method          String
+  url             String
+  requestHeaders  Json
+  requestBody     String?
+  status          Int?
+  responseHeaders Json
+  responseBody    String?
+  durationMs      Int
+  error           String?
+  createdAt       DateTime   @default(now())
+
+  @@index([operationId, createdAt])
+  @@index([connectionId, createdAt])
+}
+
+model Conflict {
+  id            String      @id @default(cuid())
+  integrationId String
+  integration   Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  kind          String
+  key           String
+  details       Json
+  status        String      @default("open")
+  resolution    Json?
+  createdAt     DateTime    @default(now())
+  resolvedAt    DateTime?
+
+  operations Operation[]
+
+  @@unique([integrationId, kind, key])
+  @@index([status])
+}
+
+model Alert {
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  channel     String
+  severity    String
+  title       String
+  body        String
+  dedupeKey   String
+  delivered   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  @@index([workspaceId, createdAt])
+  @@index([dedupeKey, createdAt])
+}
