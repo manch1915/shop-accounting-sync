@@ -1,0 +1,94 @@
+{
+  "id": 4127,
+  "number": "4127",
+  "status": "processing",
+  "currency": "RUB",
+  "prices_include_tax": true,
+  "date_created_gmt": "2026-10-18T09:14:03",
+  "date_modified_gmt": "2026-10-18T09:15:40",
+  "date_paid_gmt": "2026-10-18T09:15:39",
+  "discount_total": "150.00",
+  "discount_tax": "27.05",
+  "shipping_total": "237.70",
+  "shipping_tax": "52.30",
+  "total": "2460.00",
+  "total_tax": "443.61",
+  "customer_id": 87,
+  "customer_note": "Позвонить за час до доставки",
+  "billing": {
+    "first_name": "Марина",
+    "last_name": "Котова",
+    "company": "",
+    "address_1": "ул. Рубинштейна, 12",
+    "address_2": "кв. 5",
+    "city": "Санкт-Петербург",
+    "state": "",
+    "postcode": "191002",
+    "country": "RU",
+    "email": "m.kotova@example.ru",
+    "phone": "+79110000000"
+  },
+  "shipping": {
+    "first_name": "Марина",
+    "last_name": "Котова",
+    "company": "",
+    "address_1": "",
+    "address_2": "",
+    "city": "",
+    "state": "",
+    "postcode": "",
+    "country": ""
+  },
+  "payment_method": "yookassa",
+  "payment_method_title": "ЮKassa",
+  "transaction_id": "2f9a1c7e-000f-5000-9000-1b7c3c1d2e4f",
+  "line_items": [
+    {
+      "id": 901,
+      "name": "Кофе в зёрнах Эфиопия Иргачеффе, 250 г",
+      "product_id": 312,
+      "variation_id": 0,
+      "quantity": 2,
+      "subtotal": "1229.51",
+      "subtotal_tax": "270.49",
+      "total": "1106.56",
+      "total_tax": "243.44",
+      "taxes": [{ "id": 1, "total": "243.44", "subtotal": "270.49" }],
+      "sku": "ZP-ETH-250"
+    },
+    {
+      "id": 902,
+      "name": "Фильтры для воронки V60 (Белые)",
+      "product_id": 340,
+      "variation_id": 345,
+      "quantity": 1,
+      "subtotal": "490.00",
+      "subtotal_tax": "0.00",
+      "total": "490.00",
+      "total_tax": "0.00",
+      "taxes": [],
+      "sku": "ZP-V60-FLT-W"
+    }
+  ],
+  "tax_lines": [
+    {
+      "id": 1,
+      "rate_id": 1,
+      "rate_code": "RU-NDS-22",
+      "label": "НДС",
+      "rate_percent": 22,
+      "tax_total": "243.44",
+      "shipping_tax_total": "52.30"
+    }
+  ],
+  "shipping_lines": [
+    {
+      "id": 905,
+      "method_title": "Курьер по городу",
+      "method_id": "flat_rate",
+      "total": "237.70",
+      "total_tax": "52.30",
+      "taxes": [{ "id": 1, "total": "52.30", "subtotal": "" }]
+    }
+  ]
+}

@@ -40,3 +40,25 @@ describe('mask', () => {
     expect(out).toContain('truncated');
   });
 });
+
+describe('mask without a trustworthy content type', () => {
+  it('parses JSON sent as text/plain', () => {
+    expect(maskBody('{"access_token":"abcdefghijkl"}', 'text/plain')).not.toContain('abcdefghijkl');
+  });
+
+  it('parses form bodies without a header', () => {
+    expect(maskBody('refresh_token=rt_123456789&grant_type=refresh_token', null)).not.toContain(
+      'rt_123456789',
+    );
+  });
+
+  it('redacts key/value pairs inside broken JSON or HTML', () => {
+    const out = maskBody(
+      '<p>error "client_secret": "s3cr3t-value", token=abc12345 status=500</p>',
+      'text/html',
+    );
+    expect(out).not.toContain('s3cr3t-value');
+    expect(out).not.toContain('abc12345');
+    expect(out).toContain('status=500');
+  });
+});
