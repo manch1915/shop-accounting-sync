@@ -25,6 +25,7 @@ import type {
 
 const PAGE_SIZE = 100;
 const BATCH_LIMIT = 100;
+const MAX_PAGES = 500;
 const PAID_STATUSES = new Set(['processing', 'completed']);
 
 export const wooErrorPolicy: ErrorPolicy = {
@@ -187,9 +188,11 @@ export class WooCommerceConnector implements StoreConnector {
         query: { ...query, per_page: PAGE_SIZE, page },
       });
       out.push(...data);
-      const totalPages = headers.get('x-wp-totalpages');
-      const done = totalPages === null ? data.length < PAGE_SIZE : page >= Number(totalPages);
+      const header = Number.parseInt(headers.get('x-wp-totalpages') ?? '', 10);
+      const totalPages = Number.isFinite(header) && header > 0 ? header : null;
+      const done = data.length === 0 || (totalPages === null ? data.length < PAGE_SIZE : page >= totalPages);
       if (done) return out;
+      if (page >= MAX_PAGES) throw new Error(`${path}: more than ${MAX_PAGES} pages, refusing to continue`);
     }
   }
 

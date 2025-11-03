@@ -188,5 +188,7 @@ export interface WebhookEvent {
 
 export interface IncomingWebhook {
   headers: Record<string, string | undefined>;
+  /** query string of the delivery URL; MoySklad does not sign webhooks, so we put a secret there */
+  query?: Record<string, string | undefined>;
   rawBody: Buffer;
 }

@@ -62,3 +62,22 @@ describe('mask without a trustworthy content type', () => {
     expect(out).toContain('status=500');
   });
 });
+
+describe('mask hardening', () => {
+  it('handles escaped quotes and bare values in broken JSON', () => {
+    const out = maskBody('{"access_token": "ab\\"cdefghij", "api_key": 12345678, oops', null) ?? '';
+    expect(out).not.toContain('cdefghij');
+    expect(out).not.toContain('12345678');
+  });
+
+  it('masks header-style pairs', () => {
+    expect(maskBody('Authorization: Bearer-abcdef123456\nX-Trace: 1', null)).not.toContain('abcdef123456');
+  });
+
+  it('stays fast on large hostile input', () => {
+    const started = performance.now();
+    maskBody(`${'a'.repeat(200_000)}=`, null);
+    maskBody('token='.repeat(50_000), null);
+    expect(performance.now() - started).toBeLessThan(500);
+  });
+});
