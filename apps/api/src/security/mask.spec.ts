@@ -81,3 +81,19 @@ describe('mask hardening', () => {
     expect(performance.now() - started).toBeLessThan(500);
   });
 });
+
+describe('mask key coverage', () => {
+  it('masks dotted, bracketed and spaced keys', () => {
+    const out =
+      maskBody('client.secret=abcdef123456 auth[token]=qwerty987654 {"api key": "zxcvbnm12345"', null) ?? '';
+    expect(out).not.toContain('abcdef123456');
+    expect(out).not.toContain('qwerty987654');
+    expect(out).not.toContain('zxcvbnm12345');
+  });
+
+  it('masks the whole header value including the part after the scheme', () => {
+    const out = maskBody('Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.payload\nAccept: */*', null) ?? '';
+    expect(out).not.toContain('eyJhbGciOiJIUzI1NiJ9');
+    expect(out).toContain('Accept: */*');
+  });
+});

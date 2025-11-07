@@ -1,5 +1,5 @@
 const SECRET_KEY =
-  /(authorization|token|secret|password|passwd|api[-_]?key|consumer[-_]?key|cookie|signature|hmac|code_verifier|^code$)/i;
+  /(authorization|token|secret|password|passwd|api[-_ ]?key|consumer[-_ ]?key|cookie|signature|hmac|code_verifier|^code$)/i;
 const MASK = '••••';
 const MAX_BODY = 16_000;
 
@@ -40,10 +40,14 @@ function maskJson(value: unknown): unknown {
   return value;
 }
 const FORM_BODY = /^[^\s=&]+=[^\s&]*(&[^\s=&]+=[^\s&]*)*$/;
-// "key": <string with escapes | bare value>
-const JSON_PAIR = /("([\w-]{1,64})"\s*:\s*)("(?:[^"\\]|\\.)*"|[^\s,}\]]+)/g;
-// key=value or key: value; the key must follow a delimiter so the scan stays linear
-const KV_PAIR = /(^|[\s&?;,"'<>{(])([\w-]{1,64})(\s*[=:]\s*)([^\s&"',;<>]+)/g;
+// The text is capped at MAX_BODY before these run, and every alternation below is disjoint,
+// so the scans stay linear.
+// "any key": <string with escapes | bare value>
+const JSON_PAIR = /("((?:[^"\\]|\\.){1,256})"\s*:\s*)("(?:[^"\\]|\\.)*"|[^\s,}\]]+)/g;
+// Header-style line: the whole rest of the line is the value ("Bearer abc", "Basic xyz")
+const HEADER_LINE = /^([ \t]*)([^\s:=]{1,128})([ \t]*:[ \t]*)([^\r\n]+)$/gm;
+// key=value anywhere, keys may contain dots and brackets (client.secret, auth[token])
+const KV_PAIR = /(^|[^\w.[\]-])([\w.[\]-]{1,128})(\s*=\s*)([^\s&"',;<>]+)/g;
 
 function truncate(text: string, originalLength = text.length): string {
   const cut = text.length > MAX_BODY ? text.slice(0, MAX_BODY) : text;
@@ -69,6 +73,9 @@ export function maskBody(body: string | null, _contentType: string | null): stri
   const masked = text
     .replace(JSON_PAIR, (all, prefix: string, key: string) =>
       SECRET_KEY.test(key) ? `${prefix}"${MASK}"` : all,
+    )
+    .replace(HEADER_LINE, (all, lead: string, key: string, sep: string) =>
+      SECRET_KEY.test(key) ? `${lead}${key}${sep}${MASK}` : all,
     )
     .replace(KV_PAIR, (all, lead: string, key: string, sep: string) =>
       SECRET_KEY.test(key) ? `${lead}${key}${sep}${MASK}` : all,
