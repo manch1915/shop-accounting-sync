@@ -46,8 +46,8 @@ const FORM_BODY = /^[^\s=&]+=[^\s&]*(&[^\s=&]+=[^\s&]*)*$/;
 const JSON_PAIR = /("((?:[^"\\]|\\.){1,256})"\s*:\s*)("(?:[^"\\]|\\.)*"|[^\s,}\]]+)/g;
 // Header-style line: the whole rest of the line is the value ("Bearer abc", "Basic xyz")
 const HEADER_LINE = /^([ \t]*)([^\s:=]{1,128})([ \t]*:[ \t]*)([^\r\n]+)$/gm;
-// key=value anywhere, keys may contain dots and brackets (client.secret, auth[token])
-const KV_PAIR = /(^|[^\w.[\]-])([\w.[\]-]{1,128})(\s*=\s*)([^\s&"',;<>]+)/g;
+// key=value or key: value anywhere; keys may contain dots and brackets (client.secret, auth[token])
+const KV_PAIR = /(^|[^\w.[\]-])([\w.[\]-]{1,128})(\s*[=:]\s*)([^\s&"',;<>}]+)/g;
 
 function truncate(text: string, originalLength = text.length): string {
   const cut = text.length > MAX_BODY ? text.slice(0, MAX_BODY) : text;

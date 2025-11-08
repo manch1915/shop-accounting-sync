@@ -97,3 +97,12 @@ describe('mask key coverage', () => {
     expect(out).toContain('Accept: */*');
   });
 });
+
+describe('mask inline colon pairs', () => {
+  it('masks mid-line key: value pairs and JS-style objects', () => {
+    const out = maskBody('error at step 2, client_secret: s3cr3tvalue99 {token: tk_abcdef1234}', null) ?? '';
+    expect(out).not.toContain('s3cr3tvalue99');
+    expect(out).not.toContain('tk_abcdef1234');
+    expect(out).toContain('step 2');
+  });
+});
