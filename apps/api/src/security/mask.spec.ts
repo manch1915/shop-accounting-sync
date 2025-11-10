@@ -106,3 +106,12 @@ describe('mask inline colon pairs', () => {
     expect(out).toContain('step 2');
   });
 });
+
+describe('mask values with delimiters inside', () => {
+  it('masks the whole value up to whitespace even if it contains braces or quotes', () => {
+    const out = maskBody("password=ab}cd'ef;gh123 next=1", null) ?? '';
+    expect(out).not.toContain('gh123');
+    expect(out).not.toContain('ab}cd');
+    expect(out).toContain('next=1');
+  });
+});
