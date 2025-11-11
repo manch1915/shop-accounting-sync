@@ -39,15 +39,46 @@ function maskJson(value: unknown): unknown {
   }
   return value;
 }
-const FORM_BODY = /^[^\s=&]+=[^\s&]*(&[^\s=&]+=[^\s&]*)*$/;
+const FORM_BODY = /^[^\s=&;,]+=[^\s&;,=]*(&[^\s=&;,]+=[^\s&;,=]*)*$/;
 // The text is capped at MAX_BODY before these run, and every alternation below is disjoint,
 // so the scans stay linear.
-// "any key": <string with escapes | bare value>
-const JSON_PAIR = /("((?:[^"\\]|\\.){1,256})"\s*:\s*)("(?:[^"\\]|\\.)*"|[^\s,}\]]+)/g;
-// Header-style line: the whole rest of the line is the value ("Bearer abc", "Basic xyz")
-const HEADER_LINE = /^([ \t]*)([^\s:=]{1,128})([ \t]*:[ \t]*)([^\r\n]+)$/gm;
-// key=value or key: value anywhere; keys may contain dots and brackets (client.secret, auth[token])
-const KV_PAIR = /(^|[^\w.[\]-])([\w.[\]-]{1,128})(\s*[=:]\s*)([^\s&]+)/g;
+// Only "key + separator" is matched, values are never consumed for keys that are not secret,
+// otherwise `foo=1;password=x` would hide the second pair inside the first value.
+// Keys: "quoted with escapes", or bare with dots/brackets (client.secret, auth[token]).
+const KEY = /("((?:[^"\\]|\\.){1,256})"|(?<![\w.[\]-])([\w.[\]-]{1,128}))([ \t]*[=:][ \t]*)/g;
+// Header-style line, the value runs to the end of the line ("Bearer abc", "Basic xyz")
+const HEADER_LINE = /^([ \t]*)([A-Za-z][\w -]{0,127}?)([ \t]*:[ \t]*)([^\r\n]+)$/gm;
+
+function quotedEnd(text: string, start: number): number {
+  for (let i = start + 1; i < text.length; i++) {
+    if (text[i] === '\\') i++;
+    else if (text[i] === '"') return i + 1;
+  }
+  return text.length;
+}
+
+function bareEnd(text: string, start: number): number {
+  let i = start;
+  while (i < text.length && !/[\s&]/.test(text[i] ?? ' ')) i++;
+  return i;
+}
+
+function maskPairs(text: string): string {
+  let out = '';
+  let last = 0;
+  KEY.lastIndex = 0;
+  for (let m = KEY.exec(text); m; m = KEY.exec(text)) {
+    const key = m[2] ?? m[3] ?? '';
+    if (!SECRET_KEY.test(key)) continue;
+    const start = m.index + m[0].length;
+    const quoted = text[start] === '"';
+    const end = quoted ? quotedEnd(text, start) : bareEnd(text, start);
+    out += text.slice(last, start) + (quoted ? `"${MASK}"` : MASK);
+    last = end;
+    KEY.lastIndex = Math.max(end, KEY.lastIndex);
+  }
+  return out + text.slice(last);
+}
 
 function truncate(text: string, originalLength = text.length): string {
   const cut = text.length > MAX_BODY ? text.slice(0, MAX_BODY) : text;
@@ -70,15 +101,10 @@ export function maskBody(body: string | null, _contentType: string | null): stri
     }
     return truncate(params.toString(), body.length);
   }
-  const masked = text
-    .replace(JSON_PAIR, (all, prefix: string, key: string) =>
-      SECRET_KEY.test(key) ? `${prefix}"${MASK}"` : all,
-    )
-    .replace(HEADER_LINE, (all, lead: string, key: string, sep: string) =>
+  const masked = maskPairs(
+    text.replace(HEADER_LINE, (all, lead: string, key: string, sep: string) =>
       SECRET_KEY.test(key) ? `${lead}${key}${sep}${MASK}` : all,
-    )
-    .replace(KV_PAIR, (all, lead: string, key: string, sep: string) =>
-      SECRET_KEY.test(key) ? `${lead}${key}${sep}${MASK}` : all,
-    );
+    ),
+  );
   return truncate(masked, body.length);
 }

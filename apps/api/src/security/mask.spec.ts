@@ -115,3 +115,14 @@ describe('mask values with delimiters inside', () => {
     expect(out).toContain('next=1');
   });
 });
+
+describe('mask does not let a harmless pair swallow a secret one', () => {
+  it.each([
+    ['foo=1;password=secret123', 'secret123'],
+    ['"a":1;"token":"tok_998877"', 'tok_998877'],
+    ['id: 7, api_key: key_556677', 'key_556677'],
+    ['X-Request-Id: 1\nX-Auth Token: bearer_112233', 'bearer_112233'],
+  ])('%s', (input, secret) => {
+    expect(maskBody(input, null)).not.toContain(secret);
+  });
+});
