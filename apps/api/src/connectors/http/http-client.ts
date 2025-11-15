@@ -37,6 +37,10 @@ interface JournalScope {
 
 const scope = new AsyncLocalStorage<JournalScope>();
 
+export function currentJournalScope(): JournalScope | undefined {
+  return scope.getStore();
+}
+
 /** Everything called inside `fn` is logged against this operation attempt. */
 export function withJournalScope<T>(operationId: string, attempt: number, fn: () => Promise<T>): Promise<T> {
   return scope.run({ operationId, attempt }, fn);
@@ -60,7 +64,12 @@ export interface HttpClientOptions {
   sink: ExchangeSink;
   policy: ErrorPolicy;
   fetchImpl?: typeof fetch;
+  /** client-side budget; resolves to ms to wait, 0 when the request may go now */
+  limiter?: () => Promise<number>;
 }
+
+// Short waits are absorbed inline; longer ones park the job so a worker slot is not blocked.
+const MAX_INLINE_WAIT_MS = 2_000;
 
 export interface RequestOptions {
   query?: Record<string, string | number | boolean | undefined>;
@@ -109,6 +118,7 @@ export class HttpClient {
   }
 
   async request<T>(method: string, path: string, options: RequestOptions = {}): Promise<HttpResponse<T>> {
+    await this.waitForBudget();
     const url = this.buildUrl(path, options);
     const headers: Record<string, string> = { ...this.headers, ...lowerKeys(options.headers) };
     let body: string | undefined;
@@ -153,6 +163,15 @@ export class HttpClient {
       throw this.toError(response, text);
     }
     return { status: response.status, headers: response.headers, data: parseBody<T>(text, response) };
+  }
+
+  private async waitForBudget(): Promise<void> {
+    const { limiter, provider } = this.opts;
+    if (!limiter) return;
+    for (let wait = await limiter(); wait > 0; wait = await limiter()) {
+      if (wait > MAX_INLINE_WAIT_MS) throw new RateLimitedError(provider, wait, 'client-side rate budget');
+      await new Promise((resolve) => setTimeout(resolve, wait));
+    }
   }
 
   private toError(response: Response, text: string): SyncError {

@@ -1,0 +1,115 @@
+{
+  "data": {
+    "order": {
+      "id": "gid://shopify/Order/5987654321",
+      "name": "#1042",
+      "createdAt": "2026-10-18T10:22:38Z",
+      "updatedAt": "2026-10-18T10:23:05Z",
+      "displayFinancialStatus": "PAID",
+      "currencyCode": "GBP",
+      "taxesIncluded": true,
+      "note": "Please leave with the neighbour at no. 29 if I'm out",
+      "email": "eleanor.whitcombe@example.co.uk",
+      "phone": null,
+      "customer": {
+        "id": "gid://shopify/Customer/7712345678",
+        "firstName": "Eleanor",
+        "lastName": "Whitcombe",
+        "defaultEmailAddress": { "emailAddress": "eleanor.whitcombe@example.co.uk" },
+        "defaultPhoneNumber": { "phoneNumber": "+447700900123" }
+      },
+      "shippingAddress": {
+        "address1": "27 Mill Lane",
+        "address2": null,
+        "city": "Hebden Bridge",
+        "zip": "HX7 8AB",
+        "province": "England",
+        "countryCodeV2": "GB",
+        "company": null,
+        "firstName": "Eleanor",
+        "lastName": "Whitcombe",
+        "phone": "+447700900123"
+      },
+      "billingAddress": {
+        "address1": "27 Mill Lane",
+        "address2": null,
+        "city": "Hebden Bridge",
+        "zip": "HX7 8AB",
+        "province": "England",
+        "countryCodeV2": "GB",
+        "company": null,
+        "firstName": "Eleanor",
+        "lastName": "Whitcombe",
+        "phone": "+447700900123"
+      },
+      "lineItems": {
+        "nodes": [
+          {
+            "id": "gid://shopify/LineItem/15012345678001",
+            "name": "Assam Breakfast Loose Leaf - 250g",
+            "sku": "HT-ASM-250",
+            "quantity": 2,
+            "variant": { "id": "gid://shopify/ProductVariant/47123456780011" },
+            "product": { "id": "gid://shopify/Product/9012345670011" },
+            "originalUnitPriceSet": { "shopMoney": { "amount": "8.5" } },
+            "originalTotalSet": { "shopMoney": { "amount": "17.0" } },
+            "discountAllocations": [{ "allocatedAmountSet": { "shopMoney": { "amount": "1.7" } } }],
+            "taxLines": [{ "ratePercentage": 20.0, "priceSet": { "shopMoney": { "amount": "2.55" } } }]
+          },
+          {
+            "id": "gid://shopify/LineItem/15012345678002",
+            "name": "Darjeeling First Flush - 100g",
+            "sku": "HT-DJ1-100",
+            "quantity": 1,
+            "variant": { "id": "gid://shopify/ProductVariant/47123456780021" },
+            "product": { "id": "gid://shopify/Product/9012345670021" },
+            "originalUnitPriceSet": { "shopMoney": { "amount": "12.0" } },
+            "originalTotalSet": { "shopMoney": { "amount": "12.0" } },
+            "discountAllocations": [{ "allocatedAmountSet": { "shopMoney": { "amount": "1.2" } } }],
+            "taxLines": [{ "ratePercentage": 20.0, "priceSet": { "shopMoney": { "amount": "1.8" } } }]
+          },
+          {
+            "id": "gid://shopify/LineItem/15012345678003",
+            "name": "Stainless Steel Tea Infuser",
+            "sku": "HT-INF-01",
+            "quantity": 1,
+            "variant": { "id": "gid://shopify/ProductVariant/47123456780031" },
+            "product": { "id": "gid://shopify/Product/9012345670031" },
+            "originalUnitPriceSet": { "shopMoney": { "amount": "5.95" } },
+            "originalTotalSet": { "shopMoney": { "amount": "5.95" } },
+            "discountAllocations": [{ "allocatedAmountSet": { "shopMoney": { "amount": "0.6" } } }],
+            "taxLines": [{ "ratePercentage": 20.0, "priceSet": { "shopMoney": { "amount": "0.89" } } }]
+          }
+        ]
+      },
+      "shippingLines": {
+        "nodes": [
+          {
+            "title": "Royal Mail Tracked 48",
+            "isRemoved": false,
+            "discountedPriceSet": { "shopMoney": { "amount": "3.95" } },
+            "taxLines": [{ "ratePercentage": 20.0, "priceSet": { "shopMoney": { "amount": "0.66" } } }]
+          }
+        ]
+      },
+      "totalPriceSet": { "shopMoney": { "amount": "35.4" } },
+      "totalTaxSet": { "shopMoney": { "amount": "5.9" } },
+      "transactions": [
+        {
+          "id": "gid://shopify/OrderTransaction/7123456789",
+          "kind": "SALE",
+          "status": "SUCCESS",
+          "gateway": "shopify_payments",
+          "processedAt": "2026-10-18T10:22:41Z"
+        }
+      ]
+    }
+  },
+  "extensions": {
+    "cost": {
+      "requestedQueryCost": 642,
+      "actualQueryCost": 48,
+      "throttleStatus": { "maximumAvailable": 2000.0, "currentlyAvailable": 1952, "restoreRate": 100.0 }
+    }
+  }
+}

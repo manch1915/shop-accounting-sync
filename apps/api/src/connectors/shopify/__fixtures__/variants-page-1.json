@@ -1,0 +1,29 @@
+{
+  "data": {
+    "productVariants": {
+      "nodes": [
+        {
+          "id": "gid://shopify/ProductVariant/47123456780011",
+          "title": "250g",
+          "sku": "HT-ASM-250",
+          "price": "8.50",
+          "inventoryQuantity": 64,
+          "barcodes": { "nodes": [{ "value": "5060123450011" }] },
+          "product": { "id": "gid://shopify/Product/9012345670011", "title": "Assam Breakfast Loose Leaf" },
+          "inventoryItem": { "id": "gid://shopify/InventoryItem/49123456780011", "tracked": true }
+        },
+        {
+          "id": "gid://shopify/ProductVariant/47123456780012",
+          "title": "1kg",
+          "sku": "HT-ASM-1000",
+          "price": "27.00",
+          "inventoryQuantity": 9,
+          "barcodes": { "nodes": [] },
+          "product": { "id": "gid://shopify/Product/9012345670011", "title": "Assam Breakfast Loose Leaf" },
+          "inventoryItem": { "id": "gid://shopify/InventoryItem/49123456780012", "tracked": true }
+        }
+      ],
+      "pageInfo": { "hasNextPage": true, "endCursor": "eyJsYXN0X2lkIjo0NzEyMzQ1Njc4MDAxMn0=" }
+    }
+  }
+}

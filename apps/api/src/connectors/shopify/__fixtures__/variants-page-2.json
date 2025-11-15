@@ -1,0 +1,19 @@
+{
+  "data": {
+    "productVariants": {
+      "nodes": [
+        {
+          "id": "gid://shopify/ProductVariant/47123456780041",
+          "title": "Default Title",
+          "sku": "HT-GIFT-CARD",
+          "price": "25.00",
+          "inventoryQuantity": 0,
+          "barcodes": { "nodes": [] },
+          "product": { "id": "gid://shopify/Product/9012345670041", "title": "Hillside Tea Gift Card" },
+          "inventoryItem": { "id": "gid://shopify/InventoryItem/49123456780041", "tracked": false }
+        }
+      ],
+      "pageInfo": { "hasNextPage": false, "endCursor": "eyJsYXN0X2lkIjo0NzEyMzQ1Njc4MDA0MX0=" }
+    }
+  }
+}
