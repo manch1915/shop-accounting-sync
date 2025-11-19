@@ -1,0 +1,37 @@
+{
+  "auditContext": {
+    "meta": {
+      "type": "audit",
+      "href": "https://api.moysklad.test/api/remap/1.2/audit/0a1b2c3d-ac61-11f1-0a80-1a2b000b0001"
+    },
+    "uid": "manager@zerno",
+    "moment": "2026-10-18 14:02:31"
+  },
+  "events": [
+    {
+      "meta": {
+        "type": "product",
+        "href": "https://api.moysklad.test/api/remap/1.2/entity/product/8f1c2a10-5b2e-11f1-0a80-0d6a00145e21"
+      },
+      "action": "UPDATE",
+      "accountId": "f71cb8b6-f7b5-11ec-ac12-000f000000eb",
+      "updatedFields": ["salePrices"]
+    },
+    {
+      "meta": {
+        "type": "product",
+        "href": "https://api.moysklad.test/api/remap/1.2/entity/product/8f1c2a10-5b2e-11f1-0a80-0d6a00145e99"
+      },
+      "action": "CREATE",
+      "accountId": "f71cb8b6-f7b5-11ec-ac12-000f000000eb"
+    },
+    {
+      "meta": {
+        "type": "customerorder",
+        "href": "https://api.moysklad.test/api/remap/1.2/entity/customerorder/3b7d91e4-ac5f-11f1-0a80-1a2b000a7c11"
+      },
+      "action": "UPDATE",
+      "accountId": "f71cb8b6-f7b5-11ec-ac12-000f000000eb"
+    }
+  ]
+}

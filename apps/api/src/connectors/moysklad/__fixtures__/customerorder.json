@@ -1,0 +1,16 @@
+{
+  "meta": {
+    "href": "https://api.moysklad.test/api/remap/1.2/entity/customerorder/3b7d91e4-ac5f-11f1-0a80-1a2b000a7c11",
+    "type": "customerorder",
+    "mediaType": "application/json"
+  },
+  "id": "3b7d91e4-ac5f-11f1-0a80-1a2b000a7c11",
+  "name": "WEB-4127",
+  "externalCode": "woocommerce:4127",
+  "moment": "2026-10-18 12:14:00.000",
+  "vatEnabled": true,
+  "vatIncluded": false,
+  "sum": 246000,
+  "vatSum": 44361,
+  "payedSum": 0
+}

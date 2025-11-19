@@ -1,0 +1,12 @@
+{
+  "meta": {
+    "href": "https://api.moysklad.test/api/remap/1.2/entity/paymentin/5c0e8a77-ac60-11f1-0a80-1a2b000a9d02",
+    "type": "paymentin",
+    "mediaType": "application/json"
+  },
+  "id": "5c0e8a77-ac60-11f1-0a80-1a2b000a9d02",
+  "name": "00087",
+  "sum": 246000,
+  "moment": "2026-10-18 12:15:00.000",
+  "paymentPurpose": "ЮKassa 2f9a1c7e-000f-5000-9000-1b7c3c1d2e4f"
+}

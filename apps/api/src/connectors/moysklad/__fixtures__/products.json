@@ -1,0 +1,74 @@
+{
+  "meta": {
+    "href": "https://api.moysklad.test/api/remap/1.2/entity/product",
+    "type": "product",
+    "mediaType": "application/json",
+    "size": 3,
+    "limit": 1000,
+    "offset": 0
+  },
+  "rows": [
+    {
+      "meta": {
+        "href": "https://api.moysklad.test/api/remap/1.2/entity/product/8f1c2a10-5b2e-11f1-0a80-0d6a00145e21",
+        "type": "product",
+        "mediaType": "application/json"
+      },
+      "id": "8f1c2a10-5b2e-11f1-0a80-0d6a00145e21",
+      "name": "Кофе в зёрнах Эфиопия Иргачеффе, 250 г",
+      "code": "00041",
+      "article": "ZP-ETH-250",
+      "archived": false,
+      "useParentVat": false,
+      "vat": 22,
+      "vatEnabled": true,
+      "effectiveVat": 22,
+      "effectiveVatEnabled": true,
+      "barcodes": [{ "ean13": "4607012345674" }, { "code128": "ZPETH250" }],
+      "salePrices": [
+        {
+          "value": 64900.0,
+          "priceType": { "id": "e0a6c0a1-5b2e-11f1-0a80-0d6a00140001", "name": "Оптовая цена" }
+        },
+        {
+          "value": 74900.0,
+          "priceType": { "id": "e0a6c0a1-5b2e-11f1-0a80-0d6a00140000", "name": "Цена продажи" }
+        }
+      ]
+    },
+    {
+      "meta": {
+        "href": "https://api.moysklad.test/api/remap/1.2/entity/product/8f1c2a10-5b2e-11f1-0a80-0d6a00145e35",
+        "type": "product",
+        "mediaType": "application/json"
+      },
+      "id": "8f1c2a10-5b2e-11f1-0a80-0d6a00145e35",
+      "name": "Фильтры бумажные для V60, белые, 100 шт",
+      "code": "ZP-V60-FLT-W",
+      "archived": false,
+      "useParentVat": true,
+      "effectiveVat": 0,
+      "effectiveVatEnabled": false,
+      "salePrices": [
+        {
+          "value": 49000.0,
+          "priceType": { "id": "e0a6c0a1-5b2e-11f1-0a80-0d6a00140000", "name": "Цена продажи" }
+        }
+      ]
+    },
+    {
+      "meta": {
+        "href": "https://api.moysklad.test/api/remap/1.2/entity/product/8f1c2a10-5b2e-11f1-0a80-0d6a00145e48",
+        "type": "product",
+        "mediaType": "application/json"
+      },
+      "id": "8f1c2a10-5b2e-11f1-0a80-0d6a00145e48",
+      "name": "Кофе в зёрнах Колумбия Супремо, 1 кг",
+      "archived": true,
+      "useParentVat": false,
+      "vat": 10,
+      "vatEnabled": true,
+      "salePrices": []
+    }
+  ]
+}
