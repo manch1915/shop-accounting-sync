@@ -1,0 +1,46 @@
+{
+  "Items": [
+    {
+      "ItemID": "1a2b3c4d-0001-4e5f-8a9b-0c1d2e3f4a01",
+      "Code": "HT-EARLGREY-100",
+      "Name": "Earl Grey Loose Leaf, 100 g",
+      "IsSold": true,
+      "IsPurchased": true,
+      "IsTrackedAsInventory": true,
+      "InventoryAssetAccountCode": "630",
+      "QuantityOnHand": 42.0,
+      "SalesDetails": { "UnitPrice": 8.95, "AccountCode": "200", "TaxType": "OUTPUT2" }
+    },
+    {
+      "ItemID": "1a2b3c4d-0002-4e5f-8a9b-0c1d2e3f4a02",
+      "Code": "HT-DARJ-FF-50",
+      "Name": "Darjeeling First Flush, 50 g",
+      "IsSold": true,
+      "IsPurchased": true,
+      "IsTrackedAsInventory": true,
+      "InventoryAssetAccountCode": "630",
+      "QuantityOnHand": 7.5,
+      "SalesDetails": { "UnitPrice": 12.5, "AccountCode": "200", "TaxType": "OUTPUT2" }
+    },
+    {
+      "ItemID": "1a2b3c4d-0003-4e5f-8a9b-0c1d2e3f4a03",
+      "Code": "HT-GIFTWRAP",
+      "Name": "Gift wrapping",
+      "IsSold": true,
+      "IsPurchased": false,
+      "IsTrackedAsInventory": false,
+      "SalesDetails": { "UnitPrice": 3.0, "AccountCode": "200", "TaxType": "OUTPUT2" }
+    },
+    {
+      "ItemID": "1a2b3c4d-0004-4e5f-8a9b-0c1d2e3f4a04",
+      "Code": "HT-TEAPOT-CAST",
+      "Name": "Cast Iron Teapot, 0.8 l",
+      "IsSold": true,
+      "IsPurchased": true,
+      "IsTrackedAsInventory": true,
+      "InventoryAssetAccountCode": "630",
+      "QuantityOnHand": 0.0,
+      "SalesDetails": {}
+    }
+  ]
+}

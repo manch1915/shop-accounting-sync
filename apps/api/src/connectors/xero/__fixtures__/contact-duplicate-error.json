@@ -1,0 +1,18 @@
+{
+  "ErrorNumber": 10,
+  "Type": "ValidationException",
+  "Message": "A validation exception occurred",
+  "Elements": [
+    {
+      "ContactID": "00000000-0000-0000-0000-000000000000",
+      "Name": "Thomas Baker",
+      "EmailAddress": "tom.baker@example.co.uk",
+      "HasValidationErrors": true,
+      "ValidationErrors": [
+        {
+          "Message": "The contact name Thomas Baker is already assigned to another contact. The contact name must be unique across all active contacts."
+        }
+      ]
+    }
+  ]
+}

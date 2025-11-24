@@ -1,0 +1,50 @@
+{
+  "TaxRates": [
+    {
+      "Name": "20% (VAT on Income)",
+      "TaxType": "OUTPUT2",
+      "ReportTaxType": "OUTPUT",
+      "CanApplyToAssets": true,
+      "CanApplyToEquity": true,
+      "CanApplyToExpenses": false,
+      "CanApplyToLiabilities": true,
+      "CanApplyToRevenue": true,
+      "DisplayTaxRate": 20.0,
+      "EffectiveRate": 20.0,
+      "Status": "ACTIVE",
+      "TaxComponents": [{ "Name": "VAT", "Rate": 20.0, "IsCompound": false, "IsNonRecoverable": false }]
+    },
+    {
+      "Name": "5% (VAT on Income)",
+      "TaxType": "RROUTPUT",
+      "CanApplyToRevenue": true,
+      "DisplayTaxRate": 5.0,
+      "EffectiveRate": 5.0,
+      "Status": "ACTIVE"
+    },
+    {
+      "Name": "Zero Rated Income",
+      "TaxType": "ZERORATEDOUTPUT",
+      "CanApplyToRevenue": true,
+      "DisplayTaxRate": 0.0,
+      "EffectiveRate": 0.0,
+      "Status": "ACTIVE"
+    },
+    {
+      "Name": "20% (VAT on Expenses)",
+      "TaxType": "INPUT2",
+      "CanApplyToRevenue": false,
+      "DisplayTaxRate": 20.0,
+      "EffectiveRate": 20.0,
+      "Status": "ACTIVE"
+    },
+    {
+      "Name": "17.5% (VAT on Income)",
+      "TaxType": "OUTPUT",
+      "CanApplyToRevenue": true,
+      "DisplayTaxRate": 17.5,
+      "EffectiveRate": 17.5,
+      "Status": "ARCHIVED"
+    }
+  ]
+}

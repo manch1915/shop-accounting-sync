@@ -1,0 +1,20 @@
+{
+  "ErrorNumber": 10,
+  "Type": "ValidationException",
+  "Message": "A validation exception occurred",
+  "Elements": [
+    {
+      "Type": "ACCREC",
+      "InvoiceNumber": "WEB-1043",
+      "Reference": "shopify:6012345678902",
+      "Status": "AUTHORISED",
+      "HasValidationErrors": true,
+      "ValidationErrors": [
+        { "Message": "Item code 'HT-ASSAM-250' is not valid" },
+        {
+          "Message": "The TaxType code 'OUTPUT9' does not exist or cannot be used for this type of transaction."
+        }
+      ]
+    }
+  ]
+}
