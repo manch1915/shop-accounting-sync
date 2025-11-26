@@ -39,27 +39,34 @@ function maskJson(value: unknown): unknown {
   }
   return value;
 }
-const FORM_BODY = /^[^\s=&;,]+=[^\s&;,=]*(&[^\s=&;,]+=[^\s&;,=]*)*$/;
-// The text is capped at MAX_BODY before these run, and every alternation below is disjoint,
-// so the scans stay linear.
-// Only "key + separator" is matched, values are never consumed for keys that are not secret,
-// otherwise `foo=1;password=x` would hide the second pair inside the first value.
-// Keys: "quoted with escapes", or bare with dots/brackets (client.secret, auth[token]).
-const KEY = /("((?:[^"\\]|\\.){1,256})"|(?<![\w.[\]-])([\w.[\]-]{1,128}))([ \t]*[=:][ \t]*)/g;
-// Header-style line, the value runs to the end of the line ("Bearer abc", "Basic xyz")
-const HEADER_LINE = /^([ \t]*)([A-Za-z][\w -]{0,127}?)([ \t]*:[ \t]*)([^\r\n]+)$/gm;
 
-function quotedEnd(text: string, start: number): number {
+// Fallback for bodies that are not JSON (form posts, HTML error pages, plain text).
+// Rule: once a secret-looking key is followed by "=" or ":", everything up to the end of the
+// line or the next "&" is hidden, unless the value is quoted. Over-masking a log line is fine,
+// leaking a token is not, so this does not try to guess where a bare value ends.
+// Keys: "double" or 'single' quoted with escapes, or bare with dots, brackets and %-escapes.
+const KEY =
+  /("((?:[^"\\]|\\.){1,256})"|'((?:[^'\\]|\\.){1,256})'|(?<![\w.%[\]-])([\w.%[\]-]{1,128}))(\s*[=:]\s*)/g;
+
+function decodeKey(key: string): string {
+  try {
+    return decodeURIComponent(key.replace(/\+/g, ' '));
+  } catch {
+    return key;
+  }
+}
+
+function quotedEnd(text: string, start: number, quote: string): number {
   for (let i = start + 1; i < text.length; i++) {
     if (text[i] === '\\') i++;
-    else if (text[i] === '"') return i + 1;
+    else if (text[i] === quote) return i + 1;
   }
   return text.length;
 }
 
 function bareEnd(text: string, start: number): number {
   let i = start;
-  while (i < text.length && !/[\s&]/.test(text[i] ?? ' ')) i++;
+  while (i < text.length && text[i] !== '\n' && text[i] !== '\r' && text[i] !== '&') i++;
   return i;
 }
 
@@ -68,12 +75,12 @@ function maskPairs(text: string): string {
   let last = 0;
   KEY.lastIndex = 0;
   for (let m = KEY.exec(text); m; m = KEY.exec(text)) {
-    const key = m[2] ?? m[3] ?? '';
+    const key = decodeKey(m[2] ?? m[3] ?? m[4] ?? '');
     if (!SECRET_KEY.test(key)) continue;
     const start = m.index + m[0].length;
-    const quoted = text[start] === '"';
-    const end = quoted ? quotedEnd(text, start) : bareEnd(text, start);
-    out += text.slice(last, start) + (quoted ? `"${MASK}"` : MASK);
+    const quote = text[start] === '"' || text[start] === "'" ? text[start] : null;
+    const end = quote ? quotedEnd(text, start, quote) : bareEnd(text, start);
+    out += text.slice(last, start) + (quote ? `${quote}${MASK}${quote}` : MASK);
     last = end;
     KEY.lastIndex = Math.max(end, KEY.lastIndex);
   }
@@ -91,20 +98,7 @@ export function maskBody(body: string | null, _contentType: string | null): stri
   try {
     return truncate(JSON.stringify(maskJson(JSON.parse(body)), null, 2));
   } catch {
-    // not JSON, handled below on a bounded slice
+    // not JSON; the text scan below runs on a slice capped at MAX_BODY, so it stays linear
   }
-  const text = body.slice(0, MAX_BODY).trim();
-  if (FORM_BODY.test(text)) {
-    const params = new URLSearchParams(text);
-    for (const key of [...params.keys()]) {
-      if (SECRET_KEY.test(key)) params.set(key, MASK);
-    }
-    return truncate(params.toString(), body.length);
-  }
-  const masked = maskPairs(
-    text.replace(HEADER_LINE, (all, lead: string, key: string, sep: string) =>
-      SECRET_KEY.test(key) ? `${lead}${key}${sep}${MASK}` : all,
-    ),
-  );
-  return truncate(masked, body.length);
+  return truncate(maskPairs(body.slice(0, MAX_BODY).trim()), body.length);
 }
