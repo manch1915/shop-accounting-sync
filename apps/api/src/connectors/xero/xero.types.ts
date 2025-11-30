@@ -11,6 +11,7 @@ export interface XeroElement {
 
 export interface XeroContact extends XeroElement {
   ContactID: string;
+  ContactNumber?: string;
   Name: string;
   EmailAddress?: string;
   ContactStatus?: string;

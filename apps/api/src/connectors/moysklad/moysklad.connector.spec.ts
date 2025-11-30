@@ -190,7 +190,7 @@ describe('MoySkladConnector', () => {
     expect(filters).toEqual(['externalCode=woocommerce:4127', 'externalCode=woocommerce:9999']);
   });
 
-  it('looks a customer up by email, then phone, before creating one', async () => {
+  it('reuses only counterparties carrying our key and never searches by email', async () => {
     const filters: Array<string | null> = [];
     let created: unknown;
     server.use(
@@ -198,7 +198,9 @@ describe('MoySkladConnector', () => {
         const filter = new URL(request.url).searchParams.get('filter');
         filters.push(filter);
         return HttpResponse.json(
-          list(filter === 'phone=+79110000000' ? [{ id: AGENT, name: 'Котова' }] : []),
+          list(
+            filter === 'externalCode=woo-c87' ? [{ id: AGENT, name: 'Котова', externalCode: 'woo-c87' }] : [],
+          ),
         );
       }),
       http.post(`${BASE}/entity/counterparty`, async ({ request }) => {
@@ -211,6 +213,7 @@ describe('MoySkladConnector', () => {
     );
     const { ms } = connector();
     const customer = {
+      matchKey: 'woo-c87',
       externalId: '87',
       email: 'm.kotova@example.ru',
       phone: '+79110000000',
@@ -221,11 +224,11 @@ describe('MoySkladConnector', () => {
     };
 
     expect(await ms.upsertCustomer(customer)).toBe(AGENT);
-    expect(filters).toEqual(['email=m.kotova@example.ru', 'phone=+79110000000']);
     expect(created).toBeUndefined();
 
     const id = await ms.upsertCustomer({
       ...customer,
+      matchKey: 'woo-g5b1e0c2a9d4f',
       email: 'zakupki@kofe-moika.ru',
       phone: null,
       company: 'ООО «Кофейня на Мойке»',
@@ -238,13 +241,30 @@ describe('MoySkladConnector', () => {
         country: 'RU',
       },
     });
+    expect(filters).toEqual(['externalCode=woo-c87', 'externalCode=woo-g5b1e0c2a9d4f']);
     expect(id).toBe('7a2b3c4d-ac5e-11f1-0a80-1a2b000a5502');
     expect(created).toEqual({
+      externalCode: 'woo-g5b1e0c2a9d4f',
       name: 'ООО «Кофейня на Мойке»',
       email: 'zakupki@kofe-moika.ru',
       actualAddress: '191186, RU, Санкт-Петербург, наб. реки Мойки, 40',
       companyType: 'legal',
     });
+  });
+
+  it('refuses to look a customer up without our key', async () => {
+    const { ms } = connector();
+    await expect(
+      ms.upsertCustomer({
+        externalId: null,
+        email: 'x@example.ru;name=a',
+        phone: null,
+        firstName: 'X',
+        lastName: 'Y',
+        company: null,
+        address: null,
+      }),
+    ).rejects.toThrow(/matchKey/);
   });
 
   it('registers an incoming payment linked to the order', async () => {

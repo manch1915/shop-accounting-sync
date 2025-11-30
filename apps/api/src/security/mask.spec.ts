@@ -143,3 +143,12 @@ describe('mask quoting and encoding variants', () => {
     );
   });
 });
+
+describe('mask keys with spaces at line start', () => {
+  it.each([
+    ['API Key: ak_live_445566', 'ak_live_445566'],
+    ['ok\nConsumer Key = ck_778899', 'ck_778899'],
+  ])('%s', (input, secret) => {
+    expect(maskBody(input, null)).not.toContain(secret);
+  });
+});

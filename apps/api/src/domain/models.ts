@@ -11,6 +11,12 @@ export interface Address {
 }
 
 export interface Customer {
+  /**
+   * Our own key for this shopper, stored on the accounting contact (Xero ContactNumber,
+   * MoySklad externalCode). Contacts are only reused when this key matches, never by email
+   * alone: a guest checkout with someone else's address must not land on their account.
+   */
+  matchKey?: string;
   externalId: string | null;
   email: string | null;
   phone: string | null;

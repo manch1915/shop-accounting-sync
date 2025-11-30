@@ -81,6 +81,7 @@ const order: SalesDocumentInput = {
 };
 
 const customer: Customer = {
+  matchKey: 'shop-c7001',
   externalId: '7781',
   email: 'eleanor.whitfield@example.co.uk',
   phone: '+447700900123',
@@ -253,16 +254,24 @@ describe('XeroConnector', () => {
     expect(queries[0]?.get('summaryOnly')).toBe('true');
   });
 
-  it('reuses a contact found by email', async () => {
+  it('reuses only a contact carrying our ContactNumber, never one matched by email', async () => {
     let where: string | null = null;
     server.use(
       http.get(`${BASE}/Contacts`, ({ request }) => {
         where = new URL(request.url).searchParams.get('where');
-        return HttpResponse.json({ Contacts: [{ ContactID: CONTACT_ID, Name: 'Eleanor Whitfield' }] });
+        return HttpResponse.json({
+          Contacts: [{ ContactID: CONTACT_ID, Name: 'Eleanor Whitfield', ContactNumber: 'shop-c7001' }],
+        });
       }),
     );
     expect(await connector().xero.upsertCustomer(customer)).toBe(CONTACT_ID);
-    expect(where).toBe('EmailAddress=="eleanor.whitfield@example.co.uk"');
+    expect(where).toBe('ContactNumber=="shop-c7001"');
+  });
+
+  it('refuses a customer without a key', async () => {
+    await expect(connector().xero.upsertCustomer({ ...customer, matchKey: undefined })).rejects.toThrow(
+      /matchKey/,
+    );
   });
 
   it('creates a contact and retries with the email when the name is taken', async () => {
@@ -287,6 +296,7 @@ describe('XeroConnector', () => {
     expect(id).toBe('c0ffee00-1111-4222-8333-444455556666');
     expect(bodies[0]?.Contacts[0]).toEqual({
       Name: 'Thomas Baker',
+      ContactNumber: 'shop-c7001',
       FirstName: 'Thomas',
       LastName: 'Baker',
       EmailAddress: 'tom.baker@example.co.uk',

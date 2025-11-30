@@ -4,6 +4,7 @@ import type {
   AccountingConnectorFactory,
   ConnectorContext,
 } from '../../domain/connectors.js';
+import { requireMatchKey } from '../../domain/customer-key.js';
 import type {
   Address,
   CatalogProduct,
@@ -93,23 +94,22 @@ export class MoySkladConnector implements AccountingConnector {
     return out;
   }
 
+  // Only counterparties we created are reused (matched by our externalCode). Email and phone come
+  // from the checkout form, so matching on them could attach an order to someone else's account,
+  // and they would have to be escaped for the filter syntax.
   async upsertCustomer(customer: Customer): Promise<string> {
-    const lookups: Array<[string, string | null]> = [
-      ['email', customer.email],
-      ['phone', customer.phone],
-    ];
-    for (const [field, value] of lookups) {
-      if (!value) continue;
-      const { data } = await this.ctx.http.get<MsList<MsEntity>>('/entity/counterparty', {
-        query: { filter: `${field}=${value}`, limit: 1 },
-      });
-      const found = data.rows[0];
-      if (found) return found.id;
-    }
+    const key = requireMatchKey(customer);
+    const { data: found } = await this.ctx.http.get<MsList<MsEntity & { externalCode?: string }>>(
+      '/entity/counterparty',
+      { query: { filter: `externalCode=${key}`, limit: 1 } },
+    );
+    const existing = found.rows.find((row) => row.externalCode === key);
+    if (existing) return existing.id;
 
     const fullName = `${customer.firstName} ${customer.lastName}`.trim();
     const { data } = await this.ctx.http.post<MsEntity>('/entity/counterparty', {
       json: {
+        externalCode: key,
         name: customer.company ?? (fullName || customer.email || customer.phone || 'Покупатель'),
         email: customer.email ?? undefined,
         phone: customer.phone ?? undefined,

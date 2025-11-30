@@ -45,8 +45,9 @@ function maskJson(value: unknown): unknown {
 // line or the next "&" is hidden, unless the value is quoted. Over-masking a log line is fine,
 // leaking a token is not, so this does not try to guess where a bare value ends.
 // Keys: "double" or 'single' quoted with escapes, or bare with dots, brackets and %-escapes.
+// A key at the start of a line may contain spaces ("API Key: x", "Consumer Key = x").
 const KEY =
-  /("((?:[^"\\]|\\.){1,256})"|'((?:[^'\\]|\\.){1,256})'|(?<![\w.%[\]-])([\w.%[\]-]{1,128}))(\s*[=:]\s*)/g;
+  /("((?:[^"\\]|\\.){1,256})"|'((?:[^'\\]|\\.){1,256})'|(?<=^|[\r\n])[ \t]*([A-Za-z][\w .-]{0,63}?)|(?<![\w.%[\]-])([\w.%[\]-]{1,128}))(\s*[=:]\s*)/g;
 
 function decodeKey(key: string): string {
   try {
@@ -75,7 +76,7 @@ function maskPairs(text: string): string {
   let last = 0;
   KEY.lastIndex = 0;
   for (let m = KEY.exec(text); m; m = KEY.exec(text)) {
-    const key = decodeKey(m[2] ?? m[3] ?? m[4] ?? '');
+    const key = decodeKey(m[2] ?? m[3] ?? m[4] ?? m[5] ?? '');
     if (!SECRET_KEY.test(key)) continue;
     const start = m.index + m[0].length;
     const quote = text[start] === '"' || text[start] === "'" ? text[start] : null;

@@ -5,6 +5,7 @@ import type {
   ConnectorContext,
   Credentials,
 } from '../../domain/connectors.js';
+import { requireMatchKey } from '../../domain/customer-key.js';
 import { AuthError, SyncError, ValidationRejectedError } from '../../domain/errors.js';
 import type {
   CatalogProduct,
@@ -83,15 +84,14 @@ export class XeroConnector implements AccountingConnector {
   }
 
   async upsertCustomer(customer: Customer): Promise<string> {
-    if (customer.email) {
-      const data = await this.call(() =>
-        this.ctx.http.get<{ Contacts?: XeroContact[] }>('/Contacts', {
-          query: { where: `EmailAddress==${quote(customer.email ?? '')}` },
-        }),
-      );
-      const found = data.Contacts?.[0];
-      if (found) return found.ContactID;
-    }
+    const key = requireMatchKey(customer);
+    const data = await this.call(() =>
+      this.ctx.http.get<{ Contacts?: XeroContact[] }>('/Contacts', {
+        query: { where: `ContactNumber==${quote(key)}` },
+      }),
+    );
+    const found = data.Contacts?.find((c) => c.ContactNumber === key);
+    if (found) return found.ContactID;
 
     const fullName = `${customer.firstName} ${customer.lastName}`.trim();
     const name = customer.company ?? (fullName || customer.email || customer.phone || 'Web customer');
@@ -232,34 +232,31 @@ export class XeroConnector implements AccountingConnector {
 
   private async createContact(customer: Customer, name: string): Promise<string> {
     const address = customer.address;
-    const data = await this.put<{ Contacts?: XeroContact[] }>(
-      '/Contacts',
-      `contact:${customer.email ?? ''}`,
-      {
-        Contacts: [
-          {
-            Name: name,
-            FirstName: customer.firstName || undefined,
-            LastName: customer.lastName || undefined,
-            EmailAddress: customer.email ?? undefined,
-            Phones: customer.phone ? [{ PhoneType: 'MOBILE', PhoneNumber: customer.phone }] : undefined,
-            Addresses: address
-              ? [
-                  {
-                    AddressType: 'STREET',
-                    AddressLine1: address.line1 ?? undefined,
-                    AddressLine2: address.line2 ?? undefined,
-                    City: address.city ?? undefined,
-                    PostalCode: address.postcode ?? undefined,
-                    Region: address.region ?? undefined,
-                    Country: address.country ?? undefined,
-                  },
-                ]
-              : undefined,
-          },
-        ],
-      },
-    );
+    const data = await this.put<{ Contacts?: XeroContact[] }>('/Contacts', `contact:${customer.matchKey}`, {
+      Contacts: [
+        {
+          Name: name,
+          ContactNumber: customer.matchKey,
+          FirstName: customer.firstName || undefined,
+          LastName: customer.lastName || undefined,
+          EmailAddress: customer.email ?? undefined,
+          Phones: customer.phone ? [{ PhoneType: 'MOBILE', PhoneNumber: customer.phone }] : undefined,
+          Addresses: address
+            ? [
+                {
+                  AddressType: 'STREET',
+                  AddressLine1: address.line1 ?? undefined,
+                  AddressLine2: address.line2 ?? undefined,
+                  City: address.city ?? undefined,
+                  PostalCode: address.postcode ?? undefined,
+                  Region: address.region ?? undefined,
+                  Country: address.country ?? undefined,
+                },
+              ]
+            : undefined,
+        },
+      ],
+    });
     return accepted(data.Contacts, 'contact').ContactID;
   }
 
