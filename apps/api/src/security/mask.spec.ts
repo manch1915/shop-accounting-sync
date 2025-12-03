@@ -152,3 +152,13 @@ describe('mask keys with spaces at line start', () => {
     expect(maskBody(input, null)).not.toContain(secret);
   });
 });
+
+describe('mask secret words anywhere inside a key', () => {
+  it.each([
+    ['Note token: tk_120034', 'tk_120034'],
+    ['cfg[token]: tk_560078', 'tk_560078'],
+    ['X-Request-Id: 1, refresh_token=rt_900012', 'rt_900012'],
+  ])('%s', (input, secret) => {
+    expect(maskBody(input, null)).not.toContain(secret);
+  });
+});

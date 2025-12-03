@@ -1,17 +1,16 @@
-import { createHash } from 'node:crypto';
 import type { Customer } from './models.js';
 
 const KEY_FORMAT = /^[\w-]{1,50}$/;
 
 /**
- * "woo-c87" for a registered shopper, "woo-g3f9a..." for a guest (hash of the normalized email or
- * phone). Fits Xero's 50-char ContactNumber and is safe to put into MoySklad filter strings.
+ * "woo-c87" for a shopper with a store account, "woo-o4127" for a guest order. Guests get one
+ * contact per order on purpose: everything in a guest checkout is typed by the shopper, so reusing
+ * a contact by email or name would let anyone attach orders to someone else's account.
+ * Fits Xero's 50-char ContactNumber and is safe to put into MoySklad filter strings.
  */
-export function buildMatchKey(prefix: string, customer: Customer): string {
-  if (customer.externalId) return `${prefix}-c${customer.externalId.replace(/[^\w-]/g, '')}`.slice(0, 50);
-  const identity = (customer.email?.trim().toLowerCase() || customer.phone?.replace(/\D/g, '') || '').trim();
-  const source = identity || `${customer.firstName} ${customer.lastName}`.toLowerCase();
-  return `${prefix}-g${createHash('sha256').update(source).digest('hex').slice(0, 20)}`;
+export function buildMatchKey(prefix: string, customer: Customer, orderId: string): string {
+  const id = customer.externalId ? `c${customer.externalId}` : `o${orderId}`;
+  return `${prefix}-${id.replace(/[^\w-]/g, '')}`.slice(0, 50);
 }
 
 export function requireMatchKey(customer: Customer): string {
