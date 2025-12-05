@@ -92,6 +92,7 @@ model ProductMapping {
   storeProductId      String
   /// empty string when the product has no variants, keeps the unique index usable
   storeVariantId      String      @default("")
+  storeInventoryItemId String?
   storeSku            String
   storeName           String
   barcode             String?

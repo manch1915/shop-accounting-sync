@@ -13,6 +13,7 @@ export const OPERATION_TYPES = [
   'price.push',
   'product.publish',
   'orders.reconcile',
+  'catalog.refresh',
 ] as const;
 export type OperationType = (typeof OPERATION_TYPES)[number];
 
