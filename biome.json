@@ -1,6 +1,10 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
-  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
   "files": {
     "includes": ["**", "!**/dist", "!**/.next", "!**/generated", "!**/coverage", "!**/next-env.d.ts"]
   },
@@ -11,13 +15,27 @@
     "lineWidth": 110
   },
   "javascript": {
-    "formatter": { "quoteStyle": "single", "semicolons": "always", "trailingCommas": "all" },
-    "parser": { "unsafeParameterDecoratorsEnabled": true }
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "always",
+      "trailingCommas": "all"
+    },
+    "parser": {
+      "unsafeParameterDecoratorsEnabled": true
+    }
   },
   "css": {
-    "parser": { "tailwindDirectives": true }
+    "parser": {
+      "tailwindDirectives": true
+    }
   },
-  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
   "linter": {
     "enabled": true,
     "rules": {
@@ -26,7 +44,12 @@
         "noNonNullAssertion": "warn"
       },
       "suspicious": {
-        "noConsole": { "level": "error", "options": { "allow": ["error", "warn"] } }
+        "noConsole": {
+          "level": "error",
+          "options": {
+            "allow": ["error", "warn"]
+          }
+        }
       }
     }
   },
@@ -35,14 +58,23 @@
       "includes": ["apps/api/**"],
       "linter": {
         "rules": {
-          "style": { "useImportType": "off" }
+          "style": {
+            "useImportType": "off"
+          },
+          "complexity": {
+            "noStaticOnlyClass": "off"
+          }
         }
       }
     },
     {
       "includes": ["apps/sandbox/**", "**/scripts/**", "**/prisma/seed*.ts"],
       "linter": {
-        "rules": { "suspicious": { "noConsole": "off" } }
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
       }
     }
   ]
