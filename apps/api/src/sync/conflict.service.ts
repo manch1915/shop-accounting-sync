@@ -43,7 +43,7 @@ export class ConflictService {
         body: `${err.message}. Orders with it are on hold until it is linked on the Conflicts page.`,
         dedupeKey: `conflict:${conflict.id}`,
       });
-      await this.publish(conflict.id, false);
+      await this.publish(integrationId, conflict.id, false);
     }
     return conflict.id;
   }
@@ -102,12 +102,16 @@ export class ConflictService {
     for (const op of blocked) {
       await this.operations.requeue(op.id, `Mapping added (${resolution.targetLabel}), resuming`);
     }
-    await this.publish(conflictId, true);
+    await this.publish(conflict.integrationId, conflictId, true);
     return { resumed: blocked.length };
   }
 
-  private async publish(conflictId: string, resolved: boolean): Promise<void> {
-    const event: LiveEvent = { type: 'conflict', conflictId, resolved };
+  private async publish(integrationId: string, conflictId: string, resolved: boolean): Promise<void> {
+    const { workspaceId } = await this.prisma.integration.findUniqueOrThrow({
+      where: { id: integrationId },
+      select: { workspaceId: true },
+    });
+    const event: LiveEvent = { workspaceId, type: 'conflict', conflictId, resolved };
     await this.redis.publish(LIVE_CHANNEL, JSON.stringify(event));
   }
 }

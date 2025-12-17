@@ -1,7 +1,7 @@
 import type { ErrorCode, OperationDto, OperationStatus, OperationType } from '@sas/shared';
 import type { Operation } from '../generated/prisma/client.js';
 
-export type OperationWithIntegration = Operation & { integration: { name: string } };
+export type OperationWithIntegration = Operation & { integration: { name: string; workspaceId?: string } };
 
 function urlFrom(value: unknown): string | null {
   if (value && typeof value === 'object' && 'url' in value && typeof value.url === 'string') return value.url;

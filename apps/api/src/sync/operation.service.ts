@@ -65,7 +65,7 @@ export class OperationService {
           payload: (input.payload ?? {}) as Prisma.InputJsonValue,
           maxAttempts: MAX_ATTEMPTS,
         },
-        include: { integration: { select: { name: true } } },
+        include: { integration: { select: { name: true, workspaceId: true } } },
       });
       await this.addJob(op.id, input.type, op.id, input.delayMs);
       await this.publish(op);
@@ -97,7 +97,7 @@ export class OperationService {
         finishedAt: null,
         events: { create: { level: 'info', message: reason } },
       },
-      include: { integration: { select: { name: true } } },
+      include: { integration: { select: { name: true, workspaceId: true } } },
     });
     await this.addJob(op.id, op.type as OperationType, `${op.id}-r${Date.now()}`);
     await this.publish(op);
@@ -111,7 +111,7 @@ export class OperationService {
     const op = await this.prisma.operation.update({
       where: { id: operationId },
       data: event ? { ...data, events: { create: event } } : data,
-      include: { integration: { select: { name: true } } },
+      include: { integration: { select: { name: true, workspaceId: true } } },
     });
     await this.publish(op);
     return op;
@@ -122,7 +122,9 @@ export class OperationService {
   }
 
   async publish(op: OperationWithIntegration): Promise<void> {
-    const event: LiveEvent = { type: 'operation', operation: toOperationDto(op) };
+    const workspaceId = op.integration.workspaceId;
+    if (!workspaceId) return;
+    const event: LiveEvent = { workspaceId, type: 'operation', operation: toOperationDto(op) };
     await this.redis.publish(LIVE_CHANNEL, JSON.stringify(event));
   }
 

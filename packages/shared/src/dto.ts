@@ -185,7 +185,9 @@ export interface AlertDto {
   createdAt: string;
 }
 
-export type LiveEvent =
+/** Every event names its workspace; the stream drops anything not addressed to the viewer. */
+export type LiveEvent = { workspaceId: string } & (
   | { type: 'operation'; operation: OperationDto }
   | { type: 'connection'; connectionId: string; status: ConnectionStatus }
-  | { type: 'conflict'; conflictId: string; resolved: boolean };
+  | { type: 'conflict'; conflictId: string; resolved: boolean }
+);
