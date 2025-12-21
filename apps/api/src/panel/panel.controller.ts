@@ -10,7 +10,8 @@ import { SchedulerService } from '../sync/scheduler.service.js';
 import { PanelQueryService } from './panel-query.service.js';
 import { ZodBody } from './zod.pipe.js';
 
-const RETRYABLE_STATUSES = ['dead', 'blocked', 'retrying', 'skipped'];
+// 'retrying' is left out on purpose: it still has a live job, the runner would race it
+const RETRYABLE_STATUSES = ['dead', 'blocked', 'skipped'];
 const resolveSchema = z.object({
   target: z.string().min(1).max(200),
   targetLabel: z.string().min(1).max(300),

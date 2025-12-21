@@ -46,17 +46,29 @@ export class OperationRunner {
       where: { id: job.data.operationId },
       include: { integration: { include: { store: true, accounting: true } } },
     });
-    // stale job: the operation was finished by another job or deleted
-    if (!op || op.status === 'succeeded' || op.status === 'skipped') return null;
-
+    if (!op) return null;
     const handler = this.handlers.get(op.type as OperationType);
     if (!handler) throw new UnrecoverableError(`No handler for ${op.type}`);
 
+    // Claim the operation atomically. A second job for the same operation (manual retry racing an
+    // automatic one, a stale job after a restart) finds it already running or finished and stops,
+    // so an order or payment is never sent twice in parallel.
     const attempt = op.attempts + 1;
+    const claimed = await this.prisma.operation.updateMany({
+      where: { id: op.id, status: { in: ['queued', 'retrying'] }, attempts: op.attempts },
+      data: {
+        status: 'running',
+        attempts: attempt,
+        startedAt: op.startedAt ?? new Date(),
+        nextRetryAt: null,
+      },
+    });
+    if (claimed.count === 0) return null;
+
     const started = Date.now();
     await this.operations.update(
       op.id,
-      { status: 'running', attempts: attempt, startedAt: op.startedAt ?? new Date(), nextRetryAt: null },
+      {},
       attempt > 1 ? { level: 'info', message: `Attempt ${attempt} of ${op.maxAttempts}` } : undefined,
     );
 
