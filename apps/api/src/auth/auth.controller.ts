@@ -1,46 +1,64 @@
+import { randomBytes } from 'node:crypto';
 import {
   Body,
   Controller,
   ForbiddenException,
   Get,
   HttpCode,
+  HttpException,
+  HttpStatus,
   Inject,
   Post,
+  Req,
   Res,
   UnauthorizedException,
 } from '@nestjs/common';
 import type { SessionDto } from '@sas/shared';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
+import type { Redis } from 'ioredis';
 import { z } from 'zod';
 import { APP_CONFIG, type AppConfig } from '../config/env.js';
 import { PrismaService } from '../infra/prisma.service.js';
+import { RedisRateLimiter } from '../infra/rate-limiter.js';
+import { REDIS } from '../infra/redis.js';
 import { ZodBody } from '../panel/zod.pipe.js';
 import { Allow, SESSION_COOKIE, Session } from './auth.guard.js';
-import { type SessionClaims, signSession, verifyPassword } from './session-token.js';
+import { hashPassword, type SessionClaims, signSession, verifyPassword } from './session-token.js';
 
 const SESSION_TTL_SEC = 7 * 24 * 3600;
+const LOGIN_LIMIT = { limit: 10, windowMs: 15 * 60_000 };
 export const DEMO_EMAIL = 'demo@shop-sync.dev';
 
 const loginSchema = z.object({ email: z.email(), password: z.string().min(1).max(200) });
 
 @Controller('api/auth')
 export class AuthController {
+  private readonly limiter: RedisRateLimiter;
+  private readonly dummyHash = hashPassword(randomBytes(16).toString('hex'));
+
   constructor(
     private readonly prisma: PrismaService,
     @Inject(APP_CONFIG) private readonly config: AppConfig,
-  ) {}
+    @Inject(REDIS) redis: Redis,
+  ) {
+    this.limiter = new RedisRateLimiter(redis);
+  }
 
   @Post('login')
   @HttpCode(200)
   @Allow('public')
   async login(
     @Body(new ZodBody(loginSchema)) body: z.infer<typeof loginSchema>,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<SessionDto> {
+    const wait = await this.limiter.acquire(`login:${req.ip}`, LOGIN_LIMIT);
+    if (wait > 0) throw new HttpException('Too many attempts, try again later', HttpStatus.TOO_MANY_REQUESTS);
+
     const user = await this.prisma.user.findUnique({ where: { email: body.email.toLowerCase() } });
-    if (!user || !(await verifyPassword(body.password, user.passwordHash))) {
-      throw new UnauthorizedException('Wrong email or password');
-    }
+    // compare against a dummy hash for unknown emails too, so response time does not reveal accounts
+    const valid = await verifyPassword(body.password, user?.passwordHash ?? (await this.dummyHash));
+    if (!user || !valid) throw new UnauthorizedException('Wrong email or password');
     return this.start(res, user.id, false);
   }
 
