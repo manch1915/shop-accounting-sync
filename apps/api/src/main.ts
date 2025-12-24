@@ -19,7 +19,8 @@ async function bootstrap(): Promise<void> {
 
   // rawBody keeps the exact bytes for webhook signature checks
   const app = await NestFactory.create<NestExpressApplication>(module, { rawBody: true });
-  app.set('trust proxy', 1);
+  // only proxies on loopback or private networks (Next.js, Caddy in Docker) may set X-Forwarded-For
+  app.set('trust proxy', 'loopback, linklocal, uniquelocal');
   app.use(cookieParser());
   app.useBodyParser('json', { limit: '2mb' });
   app.useBodyParser('urlencoded', { limit: '1mb', extended: true });

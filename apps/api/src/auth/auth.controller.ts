@@ -52,10 +52,17 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<SessionDto> {
-    const wait = await this.limiter.acquire(`login:${req.ip}`, LOGIN_LIMIT);
-    if (wait > 0) throw new HttpException('Too many attempts, try again later', HttpStatus.TOO_MANY_REQUESTS);
+    // per address and per account, so rotating IPs does not help guessing one password
+    const email = body.email.toLowerCase();
+    const waits = await Promise.all([
+      this.limiter.acquire(`login:ip:${req.ip}`, LOGIN_LIMIT),
+      this.limiter.acquire(`login:email:${email}`, LOGIN_LIMIT),
+    ]);
+    if (waits.some((w) => w > 0)) {
+      throw new HttpException('Too many attempts, try again later', HttpStatus.TOO_MANY_REQUESTS);
+    }
 
-    const user = await this.prisma.user.findUnique({ where: { email: body.email.toLowerCase() } });
+    const user = await this.prisma.user.findUnique({ where: { email } });
     // compare against a dummy hash for unknown emails too, so response time does not reveal accounts
     const valid = await verifyPassword(body.password, user?.passwordHash ?? (await this.dummyHash));
     if (!user || !valid) throw new UnauthorizedException('Wrong email or password');
