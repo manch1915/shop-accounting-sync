@@ -22,12 +22,13 @@ import { PrismaService } from '../infra/prisma.service.js';
 import { RedisRateLimiter } from '../infra/rate-limiter.js';
 import { REDIS } from '../infra/redis.js';
 import { ZodBody } from '../panel/zod.pipe.js';
+import { DEMO_EMAIL } from './accounts.js';
 import { Allow, SESSION_COOKIE, Session } from './auth.guard.js';
 import { hashPassword, type SessionClaims, signSession, verifyPassword } from './session-token.js';
 
 const SESSION_TTL_SEC = 7 * 24 * 3600;
-const LOGIN_LIMIT = { limit: 10, windowMs: 15 * 60_000 };
-export const DEMO_EMAIL = 'demo@shop-sync.dev';
+const LOGIN_LIMIT = { limit: 20, windowMs: 15 * 60_000 };
+const ACCOUNT_FAILURES = { limit: 8, windowMs: 15 * 60_000 };
 
 const loginSchema = z.object({ email: z.email(), password: z.string().min(1).max(200) });
 
@@ -52,20 +53,23 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<SessionDto> {
-    // per address and per account, so rotating IPs does not help guessing one password
+    // Two limits: every attempt counts per address; only failures count per account, and a
+    // successful login clears them, so a stranger cannot lock the owner out by typing wrong passwords.
     const email = body.email.toLowerCase();
-    const waits = await Promise.all([
-      this.limiter.acquire(`login:ip:${req.ip}`, LOGIN_LIMIT),
-      this.limiter.acquire(`login:email:${email}`, LOGIN_LIMIT),
-    ]);
-    if (waits.some((w) => w > 0)) {
-      throw new HttpException('Too many attempts, try again later', HttpStatus.TOO_MANY_REQUESTS);
-    }
+    const accountKey = `login:email:${email}`;
+    const tooMany = () =>
+      new HttpException('Too many attempts, try again later', HttpStatus.TOO_MANY_REQUESTS);
+    if ((await this.limiter.usage(accountKey, ACCOUNT_FAILURES)) >= ACCOUNT_FAILURES.limit) throw tooMany();
+    if ((await this.limiter.acquire(`login:ip:${req.ip}`, LOGIN_LIMIT)) > 0) throw tooMany();
 
     const user = await this.prisma.user.findUnique({ where: { email } });
     // compare against a dummy hash for unknown emails too, so response time does not reveal accounts
     const valid = await verifyPassword(body.password, user?.passwordHash ?? (await this.dummyHash));
-    if (!user || !valid) throw new UnauthorizedException('Wrong email or password');
+    if (!user || !valid) {
+      await this.limiter.acquire(accountKey, ACCOUNT_FAILURES);
+      throw new UnauthorizedException('Wrong email or password');
+    }
+    await this.limiter.reset(accountKey);
     return this.start(res, user.id, false);
   }
 

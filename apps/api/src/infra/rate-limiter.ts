@@ -59,4 +59,8 @@ export class RedisRateLimiter {
     await this.redis.zremrangebyscore(redisKey, 0, Date.now() - rule.windowMs);
     return this.redis.zcard(redisKey);
   }
+
+  async reset(key: string): Promise<void> {
+    await this.redis.del(`sas:rl:${key}`);
+  }
 }
