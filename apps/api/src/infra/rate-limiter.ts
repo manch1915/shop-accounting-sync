@@ -34,6 +34,27 @@ local oldest = redis.call('ZRANGE', key, 0, 0, 'WITHSCORES')
 return tonumber(oldest[2]) + window - now
 `;
 
+const MULTI_SCRIPT = `
+local now = tonumber(ARGV[1])
+local member = ARGV[2]
+local wait = 0
+for i, key in ipairs(KEYS) do
+  local window = tonumber(ARGV[1 + i * 2])
+  local limit = tonumber(ARGV[2 + i * 2])
+  redis.call('ZREMRANGEBYSCORE', key, 0, now - window)
+  if redis.call('ZCARD', key) >= limit then
+    local oldest = redis.call('ZRANGE', key, 0, 0, 'WITHSCORES')
+    wait = math.max(wait, tonumber(oldest[2]) + window - now)
+  end
+end
+if wait > 0 then return wait end
+for i, key in ipairs(KEYS) do
+  redis.call('ZADD', key, now, member)
+  redis.call('PEXPIRE', key, tonumber(ARGV[1 + i * 2]))
+end
+return 0
+`;
+
 export class RedisRateLimiter {
   private seq = 0;
 
@@ -50,6 +71,25 @@ export class RedisRateLimiter {
       rule.windowMs,
       rule.limit,
       member,
+    );
+    return Number(wait);
+  }
+
+  /**
+   * All-or-nothing over several windows: a slot is taken in every key only when every key has
+   * room, so a request rejected by one limit does not eat into the others.
+   */
+  async acquireAll(entries: Array<{ key: string; rule: RateLimit }>): Promise<number> {
+    const now = Date.now();
+    const member = `${now}-${process.pid}-${this.seq++}`;
+    const args = entries.flatMap(({ rule }) => [rule.windowMs, rule.limit]);
+    const wait = await this.redis.eval(
+      MULTI_SCRIPT,
+      entries.length,
+      ...entries.map((e) => `sas:rl:${e.key}`),
+      now,
+      member,
+      ...args,
     );
     return Number(wait);
   }

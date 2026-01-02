@@ -33,6 +33,13 @@ const LOGIN_PER_ACCOUNT = { limit: 100, windowMs: 60 * 60_000 };
 
 const loginSchema = z.object({ email: z.email(), password: z.string().min(1).max(200) });
 
+// IPv6 clients usually own a whole /64, so limits apply to the prefix rather than one address
+function clientKey(ip: string | undefined): string {
+  if (!ip) return 'unknown';
+  if (!ip.includes(':') || ip.startsWith('::ffff:')) return ip;
+  return `${ip.split(':').slice(0, 4).join(':')}::/64`;
+}
+
 @Controller('api/auth')
 export class AuthController {
   private readonly limiter: RedisRateLimiter;
@@ -60,13 +67,14 @@ export class AuthController {
     //   cannot lock the owner out of their own network;
     // - per account overall: a high ceiling that only a distributed attack reaches.
     const email = body.email.toLowerCase();
-    const pairKey = `login:pair:${email}:${req.ip}`;
-    const reserved = await Promise.all([
-      this.limiter.acquire(`login:ip:${req.ip}`, LOGIN_PER_IP),
-      this.limiter.acquire(pairKey, LOGIN_PER_PAIR),
-      this.limiter.acquire(`login:email:${email}`, LOGIN_PER_ACCOUNT),
+    const source = clientKey(req.ip);
+    const pairKey = `login:pair:${email}:${source}`;
+    const wait = await this.limiter.acquireAll([
+      { key: `login:ip:${source}`, rule: LOGIN_PER_IP },
+      { key: pairKey, rule: LOGIN_PER_PAIR },
+      { key: `login:email:${email}`, rule: LOGIN_PER_ACCOUNT },
     ]);
-    if (reserved.some((wait) => wait > 0)) {
+    if (wait > 0) {
       throw new HttpException('Too many attempts, try again later', HttpStatus.TOO_MANY_REQUESTS);
     }
 
