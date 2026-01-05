@@ -83,10 +83,11 @@ export class OperationService {
   }
 
   /** Manual retry or automatic resume after a conflict was resolved. */
-  async requeue(operationId: string, reason: string): Promise<void> {
+  async requeue(operationId: string, reason: string, waitedMs = 0): Promise<void> {
     const op = await this.prisma.operation.update({
       where: { id: operationId },
       data: {
+        waitedMs: { increment: Math.max(0, Math.round(waitedMs)) },
         status: 'queued',
         attempts: 0,
         errorCode: null,

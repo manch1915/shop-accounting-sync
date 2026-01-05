@@ -167,6 +167,8 @@ model Operation {
   nextRetryAt   DateTime?
   payload       Json        @default("{}")
   result        Json?
+  /// time spent on hold waiting for a person to add a mapping, excluded from sync-time stats
+  waitedMs      Int         @default(0)
   conflictId    String?
   conflict      Conflict?   @relation(fields: [conflictId], references: [id], onDelete: SetNull)
   startedAt     DateTime?

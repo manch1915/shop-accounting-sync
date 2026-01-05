@@ -97,10 +97,14 @@ export class ConflictService {
     });
     const blocked = await this.prisma.operation.findMany({
       where: { conflictId, status: 'blocked' },
-      select: { id: true },
+      select: { id: true, updatedAt: true },
     });
     for (const op of blocked) {
-      await this.operations.requeue(op.id, `Mapping added (${resolution.targetLabel}), resuming`);
+      await this.operations.requeue(
+        op.id,
+        `Mapping added (${resolution.targetLabel}), resuming`,
+        Date.now() - op.updatedAt.getTime(),
+      );
     }
     await this.publish(conflict.integrationId, conflictId, true);
     return { resumed: blocked.length };

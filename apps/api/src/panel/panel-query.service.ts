@@ -81,7 +81,7 @@ export class PanelQueryService {
             where: { integrationId: i.id, status: { in: ['dead', 'blocked'] }, createdAt: { gte: since } },
           }),
           this.prisma.$queryRaw<Array<{ p95: number | null }>>`
-            select percentile_cont(0.95) within group (order by extract(epoch from ("finishedAt" - "createdAt")) * 1000) as p95
+            select percentile_cont(0.95) within group (order by extract(epoch from ("finishedAt" - "createdAt")) * 1000 - "waitedMs") as p95
             from "Operation"
             where "integrationId" = ${i.id} and type = 'order.export' and status = 'succeeded' and "createdAt" >= ${since}`,
         ]);
@@ -336,9 +336,9 @@ export class PanelQueryService {
         count(*) filter (where o.type = 'order.export' and o.status in ('dead', 'blocked')) as failed,
         count(*) as operations,
         count(*) filter (where o.status in ('dead', 'blocked') or o.attempts > 1) as errors,
-        percentile_cont(0.5) within group (order by extract(epoch from (o."finishedAt" - o."createdAt")) * 1000)
+        percentile_cont(0.5) within group (order by extract(epoch from (o."finishedAt" - o."createdAt")) * 1000 - o."waitedMs")
           filter (where o.type = 'order.export' and o.status = 'succeeded') as p50,
-        percentile_cont(0.95) within group (order by extract(epoch from (o."finishedAt" - o."createdAt")) * 1000)
+        percentile_cont(0.95) within group (order by extract(epoch from (o."finishedAt" - o."createdAt")) * 1000 - o."waitedMs")
           filter (where o.type = 'order.export' and o.status = 'succeeded') as p95
       from "Operation" o
       join "Integration" i on i.id = o."integrationId"
@@ -368,7 +368,7 @@ export class PanelQueryService {
       this.prisma.operation.count({ where: { ...scope, status: 'dead' } }),
       this.prisma.operation.count({ where: { ...scope, status: 'retrying' } }),
       this.prisma.$queryRaw<Array<{ p95: number | null }>>`
-        select percentile_cont(0.95) within group (order by extract(epoch from (o."finishedAt" - o."createdAt")) * 1000) as p95
+        select percentile_cont(0.95) within group (order by extract(epoch from (o."finishedAt" - o."createdAt")) * 1000 - o."waitedMs") as p95
         from "Operation" o join "Integration" i on i.id = o."integrationId"
         where i."workspaceId" = ${workspaceId} and o.type = 'order.export' and o.status = 'succeeded'
           and o."createdAt" >= ${from}`,
