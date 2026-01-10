@@ -41,6 +41,12 @@ export class SchedulerService {
       }
     }
     this.logger.log(`Schedules registered for ${integrations.length} integrations`);
+
+    // a fresh integration has no product links yet; build them now instead of in six hours
+    for (const integration of integrations) {
+      const linked = await this.prisma.productMapping.count({ where: { integrationId: integration.id } });
+      if (linked === 0) await this.fire({ integrationId: integration.id, type: 'catalog.refresh' });
+    }
   }
 
   /** Called by the scheduler worker and by webhooks that ask for an early run (stock changed). */
