@@ -24,6 +24,7 @@ import { REDIS } from '../infra/redis.js';
 import { ZodBody } from '../panel/zod.pipe.js';
 import { DEMO_EMAIL } from './accounts.js';
 import { Allow, SESSION_COOKIE, Session } from './auth.guard.js';
+import { clientKey } from './client-key.js';
 import { hashPassword, type SessionClaims, signSession, verifyPassword } from './session-token.js';
 
 const SESSION_TTL_SEC = 7 * 24 * 3600;
@@ -32,13 +33,6 @@ const LOGIN_PER_PAIR = { limit: 8, windowMs: 15 * 60_000 };
 const LOGIN_PER_ACCOUNT = { limit: 100, windowMs: 60 * 60_000 };
 
 const loginSchema = z.object({ email: z.email(), password: z.string().min(1).max(200) });
-
-// IPv6 clients usually own a whole /64, so limits apply to the prefix rather than one address
-function clientKey(ip: string | undefined): string {
-  if (!ip) return 'unknown';
-  if (!ip.includes(':') || ip.startsWith('::ffff:')) return ip;
-  return `${ip.split(':').slice(0, 4).join(':')}::/64`;
-}
 
 @Controller('api/auth')
 export class AuthController {
