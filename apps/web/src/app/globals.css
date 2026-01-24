@@ -1,0 +1,206 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Ledger paper and slate ink. One accent (cobalt) for anything you can press;
+   status colours are reserved for status and always come with a shape or a word. */
+:root {
+  --paper: #f5f7f6;
+  --surface: #ffffff;
+  --sunken: #eef2f0;
+  --ink: #17212b;
+  --muted: #5b6670;
+  --faint: #8a949c;
+  --rule: #dde3e1;
+  --rule-strong: #c6cfcc;
+  --accent: #2b59c3;
+  --accent-ink: #ffffff;
+  --accent-soft: #e6edfb;
+  --ok: #1e7f4f;
+  --ok-soft: #e3f3ea;
+  --warn: #9a6416;
+  --warn-soft: #fbf0dc;
+  --bad: #c53030;
+  --bad-soft: #fbe6e6;
+  --info: #2b59c3;
+  --chart-1: #2b59c3;
+  --chart-2: #c53030;
+  --chart-3: #8a949c;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0f1418;
+    --surface: #151c21;
+    --sunken: #11171b;
+    --ink: #e6ecea;
+    --muted: #9aa5ad;
+    --faint: #6f7b84;
+    --rule: #26313a;
+    --rule-strong: #34414b;
+    --accent: #84a6f5;
+    --accent-ink: #0f1418;
+    --accent-soft: #1c2840;
+    --ok: #5cc28d;
+    --ok-soft: #12291e;
+    --warn: #e0a54a;
+    --warn-soft: #2d2213;
+    --bad: #f07a7a;
+    --bad-soft: #321a1b;
+    --info: #84a6f5;
+    --chart-1: #84a6f5;
+    --chart-2: #f07a7a;
+    --chart-3: #6f7b84;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #0f1418;
+  --surface: #151c21;
+  --sunken: #11171b;
+  --ink: #e6ecea;
+  --muted: #9aa5ad;
+  --faint: #6f7b84;
+  --rule: #26313a;
+  --rule-strong: #34414b;
+  --accent: #84a6f5;
+  --accent-ink: #0f1418;
+  --accent-soft: #1c2840;
+  --ok: #5cc28d;
+  --ok-soft: #12291e;
+  --warn: #e0a54a;
+  --warn-soft: #2d2213;
+  --bad: #f07a7a;
+  --bad-soft: #321a1b;
+  --info: #84a6f5;
+  --chart-1: #84a6f5;
+  --chart-2: #f07a7a;
+  --chart-3: #6f7b84;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --font-sans: var(--font-golos), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+}
+
+html {
+  background: var(--paper);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--paper);
+  font-feature-settings: "tnum" 0;
+}
+
+/* figures line up in tables and stats */
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* The route line between two systems: the one visual idea of this panel. */
+@keyframes route-flow {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 16px 0;
+  }
+}
+
+.route-line {
+  height: 2px;
+  border-radius: 1px;
+}
+
+.route-line[data-state="succeeded"],
+.route-line[data-state="skipped"] {
+  background: var(--ok);
+}
+
+.route-line[data-state="running"],
+.route-line[data-state="queued"] {
+  background-image: linear-gradient(90deg, var(--accent) 50%, transparent 50%);
+  background-size: 8px 2px;
+  animation: route-flow 0.8s linear infinite;
+}
+
+.route-line[data-state="retrying"] {
+  background-image: linear-gradient(90deg, var(--warn) 50%, transparent 50%);
+  background-size: 8px 2px;
+  animation: route-flow 1.6s linear infinite;
+}
+
+.route-line[data-state="blocked"] {
+  background: linear-gradient(
+    90deg,
+    var(--warn) 0 42%,
+    transparent 42% 46%,
+    var(--warn) 46% 50%,
+    transparent 50% 54%,
+    var(--warn) 54% 58%,
+    transparent 58%
+  );
+  opacity: 0.9;
+}
+
+.route-line[data-state="dead"] {
+  background: linear-gradient(90deg, var(--bad) 0 44%, transparent 44% 56%, var(--bad) 56%);
+}
+
+@keyframes row-arrive {
+  from {
+    background-color: var(--accent-soft);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+.row-new {
+  animation: row-arrive 1.6s ease-out;
+}

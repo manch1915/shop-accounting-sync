@@ -10,3 +10,4 @@ apps/api/src/generated/
 .turbo/
 *.log
 .DS_Store
+next-env.d.ts

@@ -6,7 +6,15 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!**/dist", "!**/.next", "!**/generated", "!**/coverage", "!**/next-env.d.ts"]
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/.next",
+      "!**/generated",
+      "!**/coverage",
+      "!**/next-env.d.ts",
+      "!**/*.svg"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -73,6 +81,16 @@
         "rules": {
           "suspicious": {
             "noConsole": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/web/**/*.css"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noImportantStyles": "off"
           }
         }
       }
