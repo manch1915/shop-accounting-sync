@@ -99,6 +99,8 @@ model ProductMapping {
   accountingProductId String?
   accountingName      String?
   matchedBy           String?
+  /// false for gift cards and services: stock is never pushed to them
+  trackStock          Boolean     @default(true)
   lastStock           Int?
   lastPriceMinor      Int?
   updatedAt           DateTime    @updatedAt

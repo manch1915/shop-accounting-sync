@@ -47,7 +47,9 @@ import type {
 
 // Shopify caps input arrays at 250 items
 const INPUT_LIMIT = 250;
-const ORDERS_PAGE = 250;
+// each order is fetched in full (~650 cost points), so a reconciliation pass takes a small bite;
+// the next pass continues from the newest order seen
+const ORDERS_PAGE = 20;
 // variant nodes cost ~6 points each, 100 keeps the page under the 1000-point query limit
 const VARIANTS_PAGE = 100;
 const MIN_THROTTLE_MS = 1000;

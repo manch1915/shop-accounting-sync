@@ -99,7 +99,8 @@ export class XeroConnector implements AccountingConnector {
       return await this.createContact(customer, name);
     } catch (err) {
       // Xero wants unique contact names, and two shoppers called "Tom Baker" are not rare
-      const suffix = customer.email ?? customer.phone;
+      // our key is unique per shopper (per order for guests), so the second name cannot collide again
+      const suffix = customer.matchKey;
       if (!(err instanceof ValidationRejectedError) || !DUPLICATE_NAME.test(err.detail ?? '') || !suffix) {
         throw err;
       }

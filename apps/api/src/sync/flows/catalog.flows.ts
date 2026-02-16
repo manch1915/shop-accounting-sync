@@ -34,7 +34,9 @@ export class StockPushFlow implements FlowHandler {
     // only send what changed since the last push, stores rate-limit batch writes too
     const changes = mappings.flatMap((m) => {
       const quantity = byProduct.get(m.accountingProductId ?? '');
-      return quantity === undefined || quantity === m.lastStock ? [] : [{ mapping: m, quantity }];
+      return !m.trackStock || quantity === undefined || quantity === m.lastStock
+        ? []
+        : [{ mapping: m, quantity }];
     });
     if (changes.length === 0) return { checked: mappings.length, changed: 0 };
 

@@ -274,7 +274,7 @@ describe('XeroConnector', () => {
     );
   });
 
-  it('creates a contact and retries with the email when the name is taken', async () => {
+  it('creates a contact and retries with our key when the name is taken', async () => {
     const bodies: Array<{ Contacts: Array<Record<string, unknown>> }> = [];
     const keys: Array<string | null> = [];
     server.use(
@@ -312,7 +312,7 @@ describe('XeroConnector', () => {
         },
       ],
     });
-    expect(bodies[1]?.Contacts[0]?.Name).toBe('Thomas Baker (tom.baker@example.co.uk)');
+    expect(bodies[1]?.Contacts[0]?.Name).toBe('Thomas Baker (shop-c7001)');
     expect(keys[0]).not.toBe(keys[1]);
   });
 

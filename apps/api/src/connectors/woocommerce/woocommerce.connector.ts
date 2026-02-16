@@ -26,7 +26,6 @@ import type {
 const PAGE_SIZE = 100;
 const BATCH_LIMIT = 100;
 const MAX_PAGES = 500;
-const PAID_STATUSES = new Set(['processing', 'completed']);
 
 export const wooErrorPolicy: ErrorPolicy = {
   retryAfterMs: (headers) => parseRetryAfter(headers.get('retry-after'), 10_000),
@@ -266,7 +265,8 @@ export class WooCommerceConnector implements StoreConnector {
       taxTotalMinor: toMinor(o.total_tax, cur),
       totalMinor: toMinor(o.total, cur),
       payment: {
-        paid: paidAt !== null || PAID_STATUSES.has(o.status),
+        // only date_paid counts: cash-on-delivery orders sit in "processing" without being paid
+        paid: paidAt !== null,
         paidAt,
         method: o.payment_method_title || o.payment_method || null,
         transactionId: o.transaction_id || null,

@@ -137,7 +137,7 @@ describe('ShopifyConnector', () => {
       Order: () => order,
     });
     const orders = await connector().shop.listOrdersUpdatedSince(new Date('2026-10-18T00:00:00Z'), 500);
-    expect(calls[0]?.variables).toEqual({ first: 250, query: "updated_at:>'2026-10-18T00:00:00.000Z'" });
+    expect(calls[0]?.variables).toEqual({ first: 20, query: "updated_at:>'2026-10-18T00:00:00.000Z'" });
     expect(calls[0]?.query).toContain('sortKey: UPDATED_AT');
     expect(orders.map((o) => o.number)).toEqual(['1042']);
   });

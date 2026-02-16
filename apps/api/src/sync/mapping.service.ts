@@ -189,6 +189,7 @@ export class MappingService {
         storeName: p.name,
         barcode: p.barcode,
         storeInventoryItemId: p.inventoryItemId ?? null,
+        trackStock: p.stock !== null,
       };
       await this.prisma.productMapping.upsert({
         where: {
