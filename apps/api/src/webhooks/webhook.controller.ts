@@ -1,7 +1,10 @@
 import { Controller, HttpCode, Param, Post, type RawBodyRequest, Req } from '@nestjs/common';
 import type { Request } from 'express';
+import { Allow } from '../auth/auth.guard.js';
 import { type WebhookOutcome, WebhookService } from './webhook.service.js';
 
+// no session here: every provider signs its deliveries and WebhookService checks that instead
+@Allow('public')
 @Controller('webhooks')
 export class WebhookController {
   constructor(private readonly webhooks: WebhookService) {}
