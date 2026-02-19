@@ -49,11 +49,18 @@ export class ConflictService {
   }
 
   /** Stores the mapping a person picked and resumes every operation that waited on it. */
-  async resolve(conflictId: string, resolution: ConflictResolution): Promise<{ resumed: number }> {
+  /** `mappingSaved` when the link already exists (found by a catalog refresh), so it is not overwritten */
+  async resolve(
+    conflictId: string,
+    resolution: ConflictResolution,
+    mappingSaved = false,
+  ): Promise<{ resumed: number }> {
     const conflict = await this.prisma.conflict.findUniqueOrThrow({ where: { id: conflictId } });
     const details = conflict.details as Record<string, string | null>;
 
-    if (conflict.kind === 'sku_not_mapped') {
+    if (mappingSaved) {
+      // nothing to write, the refresh stored the match with how it was found
+    } else if (conflict.kind === 'sku_not_mapped') {
       const storeProductId = details.storeProductId;
       if (!storeProductId) throw new Error('Conflict has no store product id');
       const key = {

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { StoreProductRef } from '../../domain/models.js';
 import type { ProductMapping } from '../../generated/prisma/client.js';
 import { PrismaService } from '../../infra/prisma.service.js';
+import { ConflictService } from '../conflict.service.js';
 import type { FlowContext, FlowHandler, FlowResult } from '../flow.types.js';
 import { MappingService } from '../mapping.service.js';
 
@@ -173,7 +174,11 @@ export class ProductPublishFlow implements FlowHandler {
 export class CatalogRefreshFlow implements FlowHandler {
   readonly type = 'catalog.refresh' as const;
 
-  constructor(private readonly mapping: MappingService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mapping: MappingService,
+    private readonly conflicts: ConflictService,
+  ) {}
 
   async run(ctx: FlowContext): Promise<FlowResult> {
     const [storeProducts, catalog] = await Promise.all([
@@ -185,6 +190,38 @@ export class CatalogRefreshFlow implements FlowHandler {
       'info',
       `Store has ${result.storeProducts} items, ${result.matched} linked, ${result.unmatched} waiting for a match`,
     );
-    return { ...result, accountingProducts: catalog.length };
+    const autoResolved = await this.closeMatchedConflicts(ctx.integration.id);
+    if (autoResolved > 0)
+      await ctx.log('info', `${autoResolved} conflicts matched on their own and were closed`);
+    return { ...result, accountingProducts: catalog.length, autoResolved };
+  }
+
+  /** A product created in accounting after the order came in: link found now, release the orders. */
+  private async closeMatchedConflicts(integrationId: string): Promise<number> {
+    const open = await this.prisma.conflict.findMany({
+      where: { integrationId, status: 'open', kind: 'sku_not_mapped' },
+    });
+    let closed = 0;
+    for (const conflict of open) {
+      const details = conflict.details as Record<string, string | null>;
+      if (!details.storeProductId) continue;
+      const mapping = await this.prisma.productMapping.findUnique({
+        where: {
+          integrationId_storeProductId_storeVariantId: {
+            integrationId,
+            storeProductId: details.storeProductId,
+            storeVariantId: details.storeVariantId ?? '',
+          },
+        },
+      });
+      if (!mapping?.accountingProductId) continue;
+      await this.conflicts.resolve(
+        conflict.id,
+        { target: mapping.accountingProductId, targetLabel: mapping.accountingName ?? mapping.storeName },
+        true,
+      );
+      closed += 1;
+    }
+    return closed;
   }
 }

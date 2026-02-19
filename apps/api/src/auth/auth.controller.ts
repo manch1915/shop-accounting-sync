@@ -121,10 +121,9 @@ export class AuthController {
   }
 
   private async describe(userId: string, demo: boolean): Promise<SessionDto> {
-    const user = await this.prisma.user.findUniqueOrThrow({
-      where: { id: userId },
-      include: { workspace: true },
-    });
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { workspace: true } });
+    // the account behind an old cookie can be gone, e.g. after the demo was re-seeded
+    if (!user) throw new UnauthorizedException();
     const role = user.role === 'owner' && !demo ? 'owner' : 'viewer';
     return {
       user: { id: user.id, name: user.name, email: user.email, role },
