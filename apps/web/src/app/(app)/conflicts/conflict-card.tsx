@@ -22,7 +22,8 @@ export function ConflictCard({ conflict, locale }: { conflict: ConflictDto; loca
 
   // search the accounting catalog as the person types, a quarter second after the last key
   useEffect(() => {
-    if (!query.trim() && conflict.kind === 'sku_not_mapped') {
+    // with suggestions on screen there is nothing to fetch until the person types
+    if (!query.trim() && conflict.kind === 'sku_not_mapped' && conflict.suggestions.length > 0) {
       setResults(null);
       return;
     }
@@ -33,7 +34,7 @@ export function ConflictCard({ conflict, locale }: { conflict: ConflictDto; loca
       setResults(found);
     }, 250);
     return () => clearTimeout(timer);
-  }, [query, conflict.id, conflict.kind]);
+  }, [query, conflict.id, conflict.kind, conflict.suggestions.length]);
 
   async function link() {
     if (!chosen) return;
@@ -119,6 +120,11 @@ export function ConflictCard({ conflict, locale }: { conflict: ConflictDto; loca
             );
           })}
         </ul>
+        {results !== null && results.length === 0 && (
+          <p className="rounded-md border border-dashed border-rule-strong px-3 py-3 text-sm text-muted">
+            {t.conflicts.nothingFound}
+          </p>
+        )}
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <Button
             variant="primary"

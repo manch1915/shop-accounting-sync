@@ -32,6 +32,17 @@ const sandbox = env('SANDBOX_URL', 'http://localhost:4010').replace(/\/$/, '');
 const token = env('SANDBOX_TOKEN', 'sandbox-demo-token');
 const HISTORY_DAYS = 30;
 
+// ids the sandbox derives deterministically; GET <sandbox>/connections lists them
+const MS = {
+  organization: '64664fe6-681f-11f1-0a80-67ee7fb7ce3f',
+  mainStore: 'ca3dd64d-92fb-11f1-0a80-193754f48946',
+  stateNew: '34f5884c-baa9-11f1-0a80-38539c9ffdf6',
+  stateConfirmed: 'f9de9709-b404-11f1-0a80-300dafe4d22c',
+  stateShipped: 'fdc3a841-12e5-11f1-0a80-88085a47337a',
+};
+const XERO_TENANT = '48a3133f-ee14-4919-ab73-c69b90653325';
+const SHOPIFY_LOCATION = '76543210987';
+
 // deterministic randomness, so every reseed tells the same story
 let seed = 20261019;
 function rand(): number {
@@ -129,7 +140,7 @@ async function connections(): Promise<void> {
       baseUrl: `${sandbox}${SANDBOX_PATHS.woocommerce}`,
       credentials: cipher.encryptJson({ consumerKey: 'ck_sandbox', consumerSecret: token }),
       webhookSecret: secret,
-      settings: { currency: 'RUB', siteUrl: `${sandbox}/woo` },
+      settings: { currency: 'RUB', siteUrl: 'https://zerno-i-par.example' },
     },
     {
       id: DEMO_IDS.zerno.accounting,
@@ -142,8 +153,9 @@ async function connections(): Promise<void> {
       webhookSecret: secret,
       settings: {
         currency: 'RUB',
-        organizationId: 'org-zerno-i-par',
-        uiUrl: `${sandbox}/moysklad/app`,
+        organizationId: MS.organization,
+        // the sandbox status page stands in for the МойСклад web UI
+        uiUrl: sandbox,
       },
     },
     {
@@ -158,7 +170,7 @@ async function connections(): Promise<void> {
       settings: {
         currency: 'GBP',
         shopDomain: 'hillside-tea.myshopify.com',
-        locationId: 'gid://shopify/Location/71003',
+        locationId: SHOPIFY_LOCATION,
       },
     },
     {
@@ -170,10 +182,10 @@ async function connections(): Promise<void> {
       baseUrl: `${sandbox}${SANDBOX_PATHS.xero}`,
       credentials: cipher.encryptJson({
         accessToken: token,
-        refreshToken: `rt-${randomBytes(8).toString('hex')}`,
+        refreshToken: token,
         clientId: 'sandbox-client',
         clientSecret: token,
-        tenantId: 'hillside-demo-tenant',
+        tenantId: XERO_TENANT,
         expiresAt: new Date(Date.now() + 25 * 60_000).toISOString(),
       }),
       tokenExpiresAt: new Date(Date.now() + 25 * 60_000),
@@ -209,7 +221,7 @@ async function connections(): Promise<void> {
         currency: 'RUB',
         flags: allFlags,
         reconcileEveryMin: 10,
-        settings: { refPrefix: 'woo' },
+        settings: { refPrefix: 'woo', warehouseId: MS.mainStore },
       },
       {
         id: DEMO_IDS.hillside.integration,
@@ -232,7 +244,7 @@ async function connections(): Promise<void> {
         kind: 'status',
         source: 'processing',
         sourceLabel: 'В обработке',
-        target: 'state-confirmed',
+        target: MS.stateConfirmed,
         targetLabel: 'Подтверждён',
       },
       {
@@ -240,7 +252,15 @@ async function connections(): Promise<void> {
         kind: 'status',
         source: 'on-hold',
         sourceLabel: 'На удержании',
-        target: 'state-new',
+        target: MS.stateNew,
+        targetLabel: 'Новый',
+      },
+      {
+        integrationId: ZERNO.integrationId,
+        kind: 'status',
+        source: 'pending',
+        sourceLabel: 'Ожидает оплаты',
+        target: MS.stateNew,
         targetLabel: 'Новый',
       },
       {
@@ -248,7 +268,7 @@ async function connections(): Promise<void> {
         kind: 'status',
         source: 'completed',
         sourceLabel: 'Выполнен',
-        target: 'state-shipped',
+        target: MS.stateShipped,
         targetLabel: 'Отгружен',
       },
       {
@@ -256,13 +276,13 @@ async function connections(): Promise<void> {
         kind: 'warehouse',
         source: 'default',
         sourceLabel: 'Остатки сайта',
-        target: 'store-main',
+        target: MS.mainStore,
         targetLabel: 'Основной склад',
       },
       {
         integrationId: HILLSIDE.integrationId,
         kind: 'warehouse',
-        source: 'gid://shopify/Location/71003',
+        source: SHOPIFY_LOCATION,
         sourceLabel: 'Harrogate studio',
         target: 'default',
         targetLabel: 'Xero tracked inventory',

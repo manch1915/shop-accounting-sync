@@ -133,6 +133,8 @@ const en = {
       duplicate_sku: 'Same SKU on several products',
     } satisfies Record<ConflictKind, string>,
     match: 'match',
+    nothingFound:
+      'No product like this in accounting. Create it there, run Catalog on the Connections page, and the waiting orders will go out.',
   },
   mapping: {
     title: 'Mapping',
@@ -343,6 +345,8 @@ const ru: Dictionary = {
       duplicate_sku: 'Один артикул у нескольких товаров',
     },
     match: 'совпадение',
+    nothingFound:
+      'В учёте такого товара нет. Заведите его там, запустите «Каталог» на странице «Подключения», и ожидающие заказы уйдут.',
   },
   mapping: {
     title: 'Маппинг',
