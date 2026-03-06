@@ -14,6 +14,11 @@ const schema = z.object({
   WEB_ORIGIN: z.url().default('http://localhost:3000'),
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().default('redis://localhost:6379'),
+  /** separates queues of several deployments (or a test run) sharing one Redis */
+  QUEUE_PREFIX: z
+    .string()
+    .regex(/^[\w-]+$/)
+    .default('sas'),
   ENCRYPTION_KEY: z.string().min(40, 'ENCRYPTION_KEY must be 32 bytes in base64'),
   SESSION_SECRET: z.string().min(32),
   DEMO_ENABLED: bool,

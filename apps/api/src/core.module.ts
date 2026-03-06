@@ -15,7 +15,7 @@ const config = loadConfig();
 @Global()
 @Module({
   imports: [
-    BullModule.forRoot({ connection: redisConnectionOptions(config.REDIS_URL), prefix: 'sas' }),
+    BullModule.forRoot({ connection: redisConnectionOptions(config.REDIS_URL), prefix: config.QUEUE_PREFIX }),
     BullModule.registerQueue(...ALL_QUEUES.map((name) => ({ name }))),
   ],
   providers: [
