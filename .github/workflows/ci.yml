@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint, types, tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: sync
+          POSTGRES_PASSWORD: sync
+          POSTGRES_DB: sync
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U sync -d sync"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+      redis:
+        image: redis:7.4.5-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://sync:sync@localhost:5432/sync
+      REDIS_URL: redis://localhost:6379
+      NEXT_TELEMETRY_DISABLED: 1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint and format
+        run: npx biome ci .
+
+      - name: Generate Prisma client
+        run: npx -w @sas/api prisma generate
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Unit and contract tests
+        run: npm test
+
+      - name: Migrate database
+        run: npx -w @sas/api prisma migrate deploy
+
+      - name: Integration tests (webhook to МойСклад through the real worker)
+        working-directory: apps/api
+        env:
+          INTEGRATION: "1"
+        run: npx vitest run test/integration
+
+      - name: Build
+        run: npm run build
