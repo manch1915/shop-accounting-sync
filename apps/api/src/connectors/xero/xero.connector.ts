@@ -6,7 +6,7 @@ import type {
   Credentials,
 } from '../../domain/connectors.js';
 import { requireMatchKey } from '../../domain/customer-key.js';
-import { AuthError, SyncError, ValidationRejectedError } from '../../domain/errors.js';
+import { AuthError, NotFoundError, SyncError, ValidationRejectedError } from '../../domain/errors.js';
 import type {
   CatalogProduct,
   Customer,
@@ -162,13 +162,23 @@ export class XeroConnector implements AccountingConnector {
   }
 
   async registerPayment(input: PaymentInput): Promise<DocumentRef> {
+    // Xero recalculates VAT per line, so its invoice total can be a penny off the shop's total;
+    // pay what the invoice says is due instead of being rejected for overpaying.
+    const invoice = await this.invoice(input.document.externalId);
+    const dueMinor =
+      invoice.AmountDue === undefined ? input.amountMinor : toMinor(invoice.AmountDue, input.currency);
+    const earlier = invoice.Payments?.at(-1);
+    if (dueMinor <= 0 && earlier) {
+      return { externalId: earlier.PaymentID, number: null, url: invoiceUrl(input.document.externalId) };
+    }
+    const amountMinor = Math.min(input.amountMinor, dueMinor);
     const data = await this.put<{ Payments?: XeroPayment[] }>('/Payments', `payment:${input.reference}`, {
       Payments: [
         {
           Invoice: { InvoiceID: input.document.externalId },
           Account: { Code: this.setting('paymentAccountCode') ?? '090' },
           Date: isoDate(input.paidAt),
-          Amount: minorToNumber(input.amountMinor, input.currency),
+          Amount: minorToNumber(amountMinor, input.currency),
           Reference: input.reference,
         },
       ],
@@ -176,6 +186,15 @@ export class XeroConnector implements AccountingConnector {
     const payment = accepted(data.Payments, 'payment');
     // payments have no page of their own, they show up on the invoice
     return { externalId: payment.PaymentID, number: null, url: invoiceUrl(input.document.externalId) };
+  }
+
+  private async invoice(id: string): Promise<XeroInvoice> {
+    const data = await this.call(() =>
+      this.ctx.http.get<{ Invoices?: XeroInvoice[] }>(`/Invoices/${encodeURIComponent(id)}`),
+    );
+    const invoice = data.Invoices?.[0];
+    if (!invoice) throw new NotFoundError('xero', `invoice ${id}`);
+    return invoice;
   }
 
   async listProducts(): Promise<CatalogProduct[]> {

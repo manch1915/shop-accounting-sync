@@ -206,6 +206,13 @@ describe('XeroConnector', () => {
         }),
       ),
     );
+    server.use(
+      http.get(`${BASE}/Invoices/${INVOICE_ID}`, () =>
+        HttpResponse.json({
+          Invoices: [{ InvoiceID: INVOICE_ID, Type: 'ACCREC', Status: 'AUTHORISED', AmountDue: 999 }],
+        }),
+      ),
+    );
     const { xero } = connector();
 
     const rejected = await xero.createSalesDocument(order).catch((e: unknown) => e);
@@ -227,6 +234,39 @@ describe('XeroConnector', () => {
     expect((overpaid as ValidationRejectedError).detail).toBe(
       'Payment amount exceeds the amount outstanding on this document',
     );
+  });
+
+  it('does not pay an invoice twice', async () => {
+    let paid = false;
+    server.use(
+      http.get(`${BASE}/Invoices/${INVOICE_ID}`, () =>
+        HttpResponse.json({
+          Invoices: [
+            {
+              InvoiceID: INVOICE_ID,
+              Type: 'ACCREC',
+              Status: 'PAID',
+              AmountDue: 0,
+              Payments: [{ PaymentID: 'pay-earlier' }],
+            },
+          ],
+        }),
+      ),
+      http.put(`${BASE}/Payments`, () => {
+        paid = true;
+        return HttpResponse.json({});
+      }),
+    );
+    const ref = await connector().xero.registerPayment({
+      document: { externalId: INVOICE_ID, number: 'WEB-1042', url: null },
+      customerId: CONTACT_ID,
+      amountMinor: 4518,
+      currency: 'GBP',
+      paidAt: new Date('2026-10-18T09:15:00Z'),
+      reference: 'pi_3QhT7a',
+    });
+    expect(paid).toBe(false);
+    expect(ref.externalId).toBe('pay-earlier');
   });
 
   it('finds a live invoice by Reference and ignores voided ones', async () => {
@@ -316,10 +356,15 @@ describe('XeroConnector', () => {
     expect(keys[0]).not.toBe(keys[1]);
   });
 
-  it('records a payment against the invoice', async () => {
+  it('pays what the invoice says is due when Xero rounded VAT differently', async () => {
     let body: unknown;
     let key: string | null = null;
     server.use(
+      http.get(`${BASE}/Invoices/${INVOICE_ID}`, () =>
+        HttpResponse.json({
+          Invoices: [{ InvoiceID: INVOICE_ID, Type: 'ACCREC', Status: 'AUTHORISED', AmountDue: 45.17 }],
+        }),
+      ),
       http.put(`${BASE}/Payments`, async ({ request }) => {
         key = request.headers.get('idempotency-key');
         body = await request.json();
@@ -344,7 +389,7 @@ describe('XeroConnector', () => {
           Invoice: { InvoiceID: INVOICE_ID },
           Account: { Code: '091' },
           Date: '2026-10-18',
-          Amount: 45.18,
+          Amount: 45.17,
           Reference: 'pi_3QhT7a',
         },
       ],

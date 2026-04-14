@@ -23,6 +23,8 @@ export interface XeroInvoice extends XeroElement {
   Reference?: string;
   Type: 'ACCREC' | 'ACCPAY';
   Status: 'DRAFT' | 'SUBMITTED' | 'AUTHORISED' | 'PAID' | 'VOIDED' | 'DELETED';
+  AmountDue?: number;
+  Payments?: Array<{ PaymentID: string }>;
 }
 
 export interface XeroPayment extends XeroElement {
