@@ -20,6 +20,8 @@ export interface FlowContext {
   store: StoreConnector;
   accounting: AccountingConnector;
   log(level: 'info' | 'warn' | 'error', message: string): Promise<void>;
+  /** webhooks only carry an id; once the order is fetched the log can show its real number */
+  rename(subject: string): Promise<void>;
 }
 
 export type FlowResult = Record<string, unknown> & { skipped?: string };

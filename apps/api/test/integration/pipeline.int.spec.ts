@@ -24,6 +24,7 @@ process.env.REDIS_URL ??= 'redis://localhost:6380';
 process.env.APP_ROLE = 'all';
 // own queues, so a dev worker running on the same Redis cannot pick up these jobs
 process.env.QUEUE_PREFIX = `test-${RUN}`;
+process.env.SCHEDULES_ENABLED = 'false';
 
 let sandbox: Sandbox;
 let sandboxServer: ReturnType<typeof serve>;

@@ -74,7 +74,7 @@ export function OrdersChart({
           axisLine={false}
           minTickGap={16}
         />
-        <YAxis tick={axis} tickLine={false} axisLine={false} allowDecimals={false} width={40} />
+        <YAxis tick={axis} tickLine={false} axisLine={false} allowDecimals={false} width={48} />
         <Tooltip
           cursor={{ fill: 'var(--sunken)' }}
           content={({ active, payload, label }) => (

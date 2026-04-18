@@ -34,6 +34,7 @@ export class PaymentExportFlow implements FlowHandler {
     }
 
     const order = await ctx.store.getOrder(orderId);
+    await ctx.rename(`Payment for #${order.number}`);
     if (!order.payment.paid) return { skipped: 'Order is not paid yet' };
 
     const customerId = await ctx.accounting.upsertCustomer(customerOf(ctx, order));

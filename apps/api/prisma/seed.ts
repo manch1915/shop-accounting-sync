@@ -30,6 +30,8 @@ const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: env(
 const cipher = new CredentialCipher(env('ENCRYPTION_KEY'));
 const sandbox = env('SANDBOX_URL', 'http://localhost:4010').replace(/\/$/, '');
 const token = env('SANDBOX_TOKEN', 'sandbox-demo-token');
+// what the browser can open; inside Docker the API reaches the sandbox by service name instead
+const publicSandbox = env('SANDBOX_PUBLIC_URL', sandbox).replace(/\/$/, '');
 const HISTORY_DAYS = 30;
 
 // ids the sandbox derives deterministically; GET <sandbox>/connections lists them
@@ -155,7 +157,7 @@ async function connections(): Promise<void> {
         currency: 'RUB',
         organizationId: MS.organization,
         // the sandbox status page stands in for the МойСклад web UI
-        uiUrl: sandbox,
+        uiUrl: publicSandbox,
       },
     },
     {
@@ -763,6 +765,14 @@ async function history(): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  // containers run the seed on every start; only the first one fills an empty database
+  if (process.argv.includes('--if-empty')) {
+    const existing = await prisma.workspace.findUnique({ where: { id: DEMO_IDS.workspace } });
+    if (existing) {
+      console.log('Demo workspace exists, seed skipped');
+      return;
+    }
+  }
   await reset();
   await workspace();
   await connections();

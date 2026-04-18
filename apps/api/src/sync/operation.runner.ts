@@ -218,6 +218,9 @@ export class OperationRunner {
       store: this.connectors.store(integration.store),
       accounting: this.connectors.accounting(integration.accounting),
       log: (level, message) => this.operations.event(op.id, level, message),
+      rename: async (subject) => {
+        if (subject !== op.subject) await this.operations.update(op.id, { subject });
+      },
     };
   }
 }

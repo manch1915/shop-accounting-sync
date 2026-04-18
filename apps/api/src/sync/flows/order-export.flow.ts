@@ -28,6 +28,7 @@ export class OrderExportFlow implements FlowHandler {
     if (link) return { skipped: 'Already exported', documentId: link.accountingId, url: link.accountingUrl };
 
     const order = await ctx.store.getOrder(orderId);
+    await ctx.rename(`Order #${order.number}`);
     const ref = orderRef(ctx, order.externalId);
     await ctx.log('info', `Fetched order ${order.number}: ${order.lines.length} lines, ${order.currency}`);
 

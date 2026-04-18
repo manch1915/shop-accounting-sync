@@ -21,6 +21,11 @@ const schema = z.object({
     .default('sas'),
   ENCRYPTION_KEY: z.string().min(40, 'ENCRYPTION_KEY must be 32 bytes in base64'),
   SESSION_SECRET: z.string().min(32),
+  /** off in tests, so a test worker never touches other integrations in a shared database */
+  SCHEDULES_ENABLED: z
+    .enum(['true', 'false', '1', '0'])
+    .default('true')
+    .transform((v) => v === 'true' || v === '1'),
   DEMO_ENABLED: bool,
   DEMO_ALLOW_ACTIONS: bool,
   TELEGRAM_BOT_TOKEN: z.string().optional().default(''),
