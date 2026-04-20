@@ -10,6 +10,8 @@ const mono = JetBrains_Mono({
   variable: '--font-jetbrains',
   display: 'swap',
   weight: ['400', '500'],
+  // only payloads and ids use it, none of that is above the fold
+  preload: false,
 });
 
 export const metadata: Metadata = {

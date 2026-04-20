@@ -40,7 +40,7 @@ export function Preferences({
       <button
         type="button"
         className="h-8 rounded-md px-2 text-xs font-medium text-muted hover:bg-sunken hover:text-ink"
-        aria-label={`${t.language}: ${locale === 'en' ? 'English' : 'Русский'}`}
+        aria-label={`${locale === 'en' ? 'RU' : 'EN'}, ${t.language}`}
         onClick={() => {
           setPreference('sas_locale', locale === 'en' ? 'ru' : 'en');
           router.refresh();

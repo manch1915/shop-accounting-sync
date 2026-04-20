@@ -1,9 +1,13 @@
+import { fileURLToPath } from 'node:url';
 import type { NextConfig } from 'next';
 
+// rewrites are baked in at build time, so the Docker build passes API_INTERNAL_URL as a build arg
 const api = process.env.API_INTERNAL_URL ?? 'http://localhost:4000';
 
 const config: NextConfig = {
   output: 'standalone',
+  // trace from the monorepo root so workspace packages end up in the standalone build
+  outputFileTracingRoot: fileURLToPath(new URL('../../', import.meta.url)),
   // gzip would buffer the live event stream; Caddy compresses in production
   compress: false,
   poweredByHeader: false,

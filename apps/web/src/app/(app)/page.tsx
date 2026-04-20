@@ -1,6 +1,6 @@
 import type { IntegrationDto, OperationDto, Page, StatsDto } from '@sas/shared';
 import Link from 'next/link';
-import { ErrorShareChart, LatencyChart, OrdersChart } from '@/components/charts';
+import { ErrorShareChart, LatencyChart, OrdersChart } from '@/components/charts-lazy';
 import { LiveFeed } from '@/components/live-feed';
 import { PROVIDER_NAMES, ProviderMark } from '@/components/provider-mark';
 import { PageHeader, Panel } from '@/components/ui';
@@ -133,7 +133,7 @@ function IntegrationStrip({
         </span>
       </div>
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-        <h3 className="font-semibold">{i.name}</h3>
+        <h2 className="font-semibold">{i.name}</h2>
         <dl className="num flex flex-wrap gap-x-5 gap-y-1 text-sm">
           <div className="flex gap-1.5">
             <dt className="text-muted">{t.overview.last24h}</dt>
