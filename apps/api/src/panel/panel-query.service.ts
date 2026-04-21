@@ -50,6 +50,9 @@ const withIntegration = { integration: { select: { name: true } } } as const;
 
 @Injectable()
 export class PanelQueryService {
+  // aggregates over thousands of operations; the live feed carries what happened in the last seconds
+  private readonly cache = new Map<string, { until: number; value: Promise<unknown> }>();
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly connectors: ConnectorService,
@@ -64,7 +67,26 @@ export class PanelQueryService {
     return Promise.all(rows.map((c) => this.connectionDto(c)));
   }
 
-  async integrations(workspaceId: string): Promise<IntegrationDto[]> {
+  integrations(workspaceId: string): Promise<IntegrationDto[]> {
+    return this.cached(`integrations:${workspaceId}`, () => this.loadIntegrations(workspaceId));
+  }
+
+  stats(workspaceId: string, days: number): Promise<StatsDto> {
+    return this.cached(`stats:${workspaceId}:${days}`, () => this.loadStats(workspaceId, days));
+  }
+
+  private cached<T>(key: string, load: () => Promise<T>, ttlMs = 10_000): Promise<T> {
+    const hit = this.cache.get(key);
+    if (hit && hit.until > Date.now()) return hit.value as Promise<T>;
+    const value = load().catch((err: unknown) => {
+      this.cache.delete(key);
+      throw err;
+    });
+    this.cache.set(key, { until: Date.now() + ttlMs, value });
+    return value;
+  }
+
+  private async loadIntegrations(workspaceId: string): Promise<IntegrationDto[]> {
     const rows = await this.prisma.integration.findMany({
       where: { workspaceId },
       include: { store: true, accounting: true },
@@ -326,7 +348,7 @@ export class PanelQueryService {
     }));
   }
 
-  async stats(workspaceId: string, days: number): Promise<StatsDto> {
+  private async loadStats(workspaceId: string, days: number): Promise<StatsDto> {
     const from = new Date();
     from.setUTCHours(0, 0, 0, 0);
     from.setUTCDate(from.getUTCDate() - (days - 1));
