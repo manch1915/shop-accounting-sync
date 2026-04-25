@@ -30,7 +30,7 @@ export class PanelController {
 
   @Get('overview')
   overview(@Session() s: SessionClaims, @Query('days') days?: string) {
-    const span = Math.min(Math.max(Number(days) || 14, 1), 90);
+    const span = Math.min(Math.max(Math.trunc(Number(days)) || 14, 1), 90);
     return this.query.stats(s.ws, span);
   }
 

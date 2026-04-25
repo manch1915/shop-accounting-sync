@@ -47,6 +47,7 @@ interface DailyRow {
 }
 
 const withIntegration = { integration: { select: { name: true } } } as const;
+const MAX_CACHE_ENTRIES = 1000;
 
 @Injectable()
 export class PanelQueryService {
@@ -76,8 +77,12 @@ export class PanelQueryService {
   }
 
   private cached<T>(key: string, load: () => Promise<T>, ttlMs = 10_000): Promise<T> {
+    const now = Date.now();
     const hit = this.cache.get(key);
-    if (hit && hit.until > Date.now()) return hit.value as Promise<T>;
+    if (hit && hit.until > now) return hit.value as Promise<T>;
+    // keys are bounded by workspaces x 90 day spans; still sweep, and never let it grow past a cap
+    for (const [k, entry] of this.cache) if (entry.until <= now) this.cache.delete(k);
+    if (this.cache.size >= MAX_CACHE_ENTRIES) this.cache.clear();
     const value = load().catch((err: unknown) => {
       this.cache.delete(key);
       throw err;
