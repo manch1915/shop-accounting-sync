@@ -10,7 +10,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "npm run dev --workspaces --if-present",
+    "dev": "concurrently -k -n sandbox,api,web -c magenta,cyan,green \"npm run dev -w @sas/sandbox\" \"npm run dev -w @sas/api\" \"npm run dev -w @sas/web\"",
     "build": "npm run build --workspaces --if-present",
     "lint": "biome check .",
     "format": "biome check --write .",
@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "concurrently": "10.0.6"
   }
 }
