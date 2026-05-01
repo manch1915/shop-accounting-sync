@@ -96,7 +96,7 @@ export default async function OperationPage({ params }: { params: Promise<{ id: 
         </section>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.6fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.6fr)]">
         <div className="space-y-4">
           <Panel title={t.detail.timeline} bodyClassName="p-4">
             <ol className="relative space-y-3 border-l border-rule pl-4">

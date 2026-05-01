@@ -86,7 +86,7 @@ export default async function OverviewPage() {
         </Panel>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[1fr_1.4fr]">
         <Panel title={t.overview.errorShare} bodyClassName="p-4">
           <ErrorShareChart data={stats.daily} locale={locale} title={t.overview.errorShare} />
         </Panel>

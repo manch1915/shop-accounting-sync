@@ -1,4 +1,4 @@
-import { type ErrorCode, type Provider, RETRYABLE } from '@sas/shared';
+import { type ErrorCode, PROVIDER_NAMES as NAMES, type Provider, RETRYABLE } from '@sas/shared';
 
 export class SyncError extends Error {
   constructor(
@@ -22,37 +22,42 @@ export class RateLimitedError extends SyncError {
     readonly retryAfterMs: number,
     detail: string | null = null,
   ) {
-    super('rate_limited', `${provider} rate limit, retry in ${retryAfterMs} ms`, { provider }, detail);
+    super('rate_limited', `${NAMES[provider]} rate limit, retry in ${retryAfterMs} ms`, { provider }, detail);
   }
 }
 
 export class ProviderUnavailableError extends SyncError {
   constructor(provider: Provider, status: number | null, detail: string | null = null) {
-    super('provider_unavailable', `${provider} unavailable (${status ?? 'network'})`, { provider }, detail);
+    super(
+      'provider_unavailable',
+      `${NAMES[provider]} unavailable (${status ?? 'network'})`,
+      { provider },
+      detail,
+    );
   }
 }
 
 export class TimeoutError extends SyncError {
   constructor(provider: Provider, timeoutMs: number) {
-    super('timeout', `${provider} did not respond in ${timeoutMs} ms`, { provider });
+    super('timeout', `${NAMES[provider]} did not respond in ${timeoutMs} ms`, { provider });
   }
 }
 
 export class AuthError extends SyncError {
   constructor(provider: Provider, detail: string | null = null) {
-    super('auth_failed', `${provider} rejected credentials`, { provider }, detail);
+    super('auth_failed', `${NAMES[provider]} rejected credentials`, { provider }, detail);
   }
 }
 
 export class ValidationRejectedError extends SyncError {
   constructor(provider: Provider, detail: string) {
-    super('validation_rejected', `${provider} rejected the request: ${detail}`, { provider }, detail);
+    super('validation_rejected', `${NAMES[provider]} rejected the request: ${detail}`, { provider }, detail);
   }
 }
 
 export class NotFoundError extends SyncError {
   constructor(provider: Provider, what: string) {
-    super('not_found', `${what} not found in ${provider}`, { provider }, what);
+    super('not_found', `${what} not found in ${NAMES[provider]}`, { provider }, what);
   }
 }
 

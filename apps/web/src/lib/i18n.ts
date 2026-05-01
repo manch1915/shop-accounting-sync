@@ -46,7 +46,8 @@ const en = {
     successRate: 'Success rate',
     p95: 'Sync time, p95',
     attention: 'Needs attention',
-    attentionDetail: (conflicts: number, dead: number) => `${conflicts} conflicts, ${dead} failed`,
+    attentionDetail: (conflicts: number, dead: number) =>
+      `${conflicts} ${conflicts === 1 ? 'conflict' : 'conflicts'}, ${dead} failed`,
     ordersPerDay: 'Orders per day',
     syncTime: 'Time from order to document',
     errorShare: 'Operations that needed a retry or failed',

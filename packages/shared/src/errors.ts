@@ -1,3 +1,5 @@
+import { PROVIDER_NAMES, type Provider } from './enums.js';
+
 export const ERROR_CODES = [
   'rate_limited',
   'provider_unavailable',
@@ -127,6 +129,10 @@ export function describeError(
   locale: Locale = 'en',
 ): ErrorText {
   const text = TEXTS[locale][code];
-  const fill = (s: string) => s.replace(/\{(\w+)\}/g, (_, key: string) => String(params[key] ?? '…'));
+  const values: Record<string, string | number> = { ...params };
+  if (typeof values.provider === 'string' && values.provider in PROVIDER_NAMES) {
+    values.provider = PROVIDER_NAMES[values.provider as Provider];
+  }
+  const fill = (s: string) => s.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? '…'));
   return { title: fill(text.title), hint: fill(text.hint) };
 }

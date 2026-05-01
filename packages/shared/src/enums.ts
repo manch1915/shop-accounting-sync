@@ -6,6 +6,13 @@ export type StoreProvider = (typeof STORE_PROVIDERS)[number];
 export type AccountingProvider = (typeof ACCOUNTING_PROVIDERS)[number];
 export type Provider = (typeof PROVIDERS)[number];
 
+export const PROVIDER_NAMES: Record<Provider, string> = {
+  woocommerce: 'WooCommerce',
+  shopify: 'Shopify',
+  moysklad: 'МойСклад',
+  xero: 'Xero',
+};
+
 export const OPERATION_TYPES = [
   'order.export',
   'payment.export',

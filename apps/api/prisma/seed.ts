@@ -33,6 +33,7 @@ const token = env('SANDBOX_TOKEN', 'sandbox-demo-token');
 // what the browser can open; inside Docker the API reaches the sandbox by service name instead
 const publicSandbox = env('SANDBOX_PUBLIC_URL', sandbox).replace(/\/$/, '');
 const HISTORY_DAYS = 30;
+const ACCOUNTING_NAME = { moysklad: 'МойСклад', xero: 'Xero' } as const;
 
 // ids the sandbox derives deterministically; GET <sandbox>/connections lists them
 const MS = {
@@ -439,7 +440,7 @@ function orderHistory(plan: ShopPlan, orderId: number, created: Date): HistoryOp
       level: 'warn',
       message: limited
         ? `Rate limited, continuing in ${Math.ceil(retryDelay / 1000)} s`
-        : `${accounting} unavailable (503). Retrying in about ${Math.ceil(retryDelay / 1000)} s`,
+        : `${ACCOUNTING_NAME[accounting]} unavailable (503). Retrying in about ${Math.ceil(retryDelay / 1000)} s`,
       offsetMs: queueMs + fetchMs + 300,
     });
   }
@@ -484,7 +485,7 @@ function orderHistory(plan: ShopPlan, orderId: number, created: Date): HistoryOp
       level: outcome === 'dead' ? 'error' : 'warn',
       message:
         outcome === 'dead'
-          ? `${accounting} rejected the request: ${detail}`
+          ? `${ACCOUNTING_NAME[accounting]} rejected the request: ${detail}`
           : 'On hold: waiting for a product mapping, resolved later',
       offsetMs: failAt,
     });
@@ -570,7 +571,11 @@ function orderHistory(plan: ShopPlan, orderId: number, created: Date): HistoryOp
       outcome === 'retried' ? 2 : 1,
     ),
   );
-  events.push({ level: 'info', message: `Created ${docNumber} in ${accounting}`, offsetMs: totalMs - 50 });
+  events.push({
+    level: 'info',
+    message: `Created ${docNumber} in ${ACCOUNTING_NAME[accounting]}`,
+    offsetMs: totalMs - 50,
+  });
   events.push({ level: 'info', message: 'Done', offsetMs: totalMs });
 
   const order: HistoryOp = {
@@ -747,7 +752,7 @@ async function history(): Promise<void> {
         channel: 'log',
         severity: 'warning',
         title: 'Зерно и Пар: needs a mapping',
-        body: 'sku_not_mapped: ZP-MUG-ENAMEL. Orders with it are on hold until it is linked on the Conflicts page.',
+        body: 'SKU ZP-MUG-ENAMEL is not linked to a product in МойСклад. Orders with it are on hold until it is linked on the Conflicts page.',
         dedupeKey: 'hist:conflict',
         createdAt: new Date(end - 6 * 86_400_000),
       },
@@ -756,7 +761,7 @@ async function history(): Promise<void> {
         channel: 'log',
         severity: 'critical',
         title: 'Hillside Tea Co.: Order failed',
-        body: 'xero rejected the request. It is in failed jobs with the full request and response, ready to retry.',
+        body: 'Xero rejected the request. It is in failed jobs with the full request and response, ready to retry.',
         dedupeKey: 'hist:dead',
         createdAt: new Date(end - 2 * 86_400_000),
       },

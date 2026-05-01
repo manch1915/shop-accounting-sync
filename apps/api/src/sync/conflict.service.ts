@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { LiveEvent } from '@sas/shared';
+import { describeError, type LiveEvent } from '@sas/shared';
 import type { Redis } from 'ioredis';
 import { AlertService } from '../alerts/alert.service.js';
 import type { MappingError } from '../domain/errors.js';
@@ -40,7 +40,7 @@ export class ConflictService {
       await this.alerts.raise(integration.workspaceId, {
         severity: 'warning',
         title: `${integration.name}: needs a mapping`,
-        body: `${err.message}. Orders with it are on hold until it is linked on the Conflicts page.`,
+        body: `${describeError(err.code, err.params).title}. Orders with it are on hold until it is linked on the Conflicts page.`,
         dedupeKey: `conflict:${conflict.id}`,
       });
       await this.publish(integrationId, conflict.id, false);
