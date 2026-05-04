@@ -100,9 +100,7 @@ describe('Xero sandbox against the API connector', () => {
       externalId: null,
     });
     expect(namesake).not.toBe(id);
-    expect(h.sandbox.state.xero.contacts.get(namesake)?.Name).toBe(
-      'Eleanor Whitfield (eleanor.whitfield@example.co.uk)',
-    );
+    expect(h.sandbox.state.xero.contacts.get(namesake)?.Name).toBe('Eleanor Whitfield (shop-o6100000041251)');
   });
 
   it('creates an invoice once, finds it by Reference and takes a payment', async () => {
@@ -135,8 +133,9 @@ describe('Xero sandbox against the API connector', () => {
     expect(h.sandbox.state.xero.invoices.get(doc.externalId)?.Status).toBe('PAID');
   });
 
-  it('refuses invoices above the demo limit and overpayments', async () => {
-    const xero = harness().xero();
+  it('refuses invoices above the demo limit and never overpays or pays twice', async () => {
+    const h = harness();
+    const xero = h.xero();
     const contact = await xero.upsertCustomer(customer);
     const big = invoiceInput(contact, {
       externalRef: 'shop-6100000041260',
@@ -149,20 +148,30 @@ describe('Xero sandbox against the API connector', () => {
       'The document total exceeds the limit allowed for this demo organisation',
     );
 
+    // the connector pays what Xero says is due, so a shop total a little above the invoice never overpays
     const doc = await xero.createSalesDocument(invoiceInput(contact));
-    const overpaid = await xero
-      .registerPayment({
-        document: doc,
-        customerId: contact,
-        amountMinor: 99_999,
-        currency: 'GBP',
-        paidAt: new Date(),
-        reference: 'x',
-      })
-      .catch((e: unknown) => e);
-    expect((overpaid as ValidationRejectedError).detail).toBe(
-      'Payment amount exceeds the amount outstanding on this document',
-    );
+    const invoice = h.sandbox.state.xero.invoices.get(doc.externalId);
+    await xero.registerPayment({
+      document: doc,
+      customerId: contact,
+      amountMinor: 99_999,
+      currency: 'GBP',
+      paidAt: new Date(),
+      reference: 'x',
+    });
+    expect(invoice?.amountPaid).toBe(invoice?.total);
+
+    // a second payment for the same invoice is a no-op returning the first one
+    const again = await xero.registerPayment({
+      document: doc,
+      customerId: contact,
+      amountMinor: 99_999,
+      currency: 'GBP',
+      paidAt: new Date(),
+      reference: 'y',
+    });
+    expect(h.sandbox.state.xero.payments.size).toBe(1);
+    expect(again.externalId).toBe([...h.sandbox.state.xero.payments.keys()][0]);
   });
 
   it('refreshes a rejected access token through the identity endpoint', async () => {
