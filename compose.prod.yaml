@@ -1,0 +1,48 @@
+# Production override: docker compose -f compose.yaml -f compose.prod.yaml up -d --build
+# Nothing listens on host ports; the dashboard joins the reverse proxy network instead.
+
+x-limits: &limits
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+
+services:
+  postgres:
+    <<: *limits
+    ports: !reset []
+    deploy: { resources: { limits: { memory: 384m } } }
+
+  redis:
+    <<: *limits
+    ports: !reset []
+    deploy: { resources: { limits: { memory: 128m } } }
+
+  api:
+    <<: *limits
+    deploy: { resources: { limits: { memory: 384m } } }
+
+  worker:
+    <<: *limits
+    deploy: { resources: { limits: { memory: 384m } } }
+
+  sandbox:
+    <<: *limits
+    ports: !reset []
+    environment:
+      # a calmer pace than local development, the demo runs around the clock
+      GENERATOR_MIN_SEC: ${GENERATOR_MIN_SEC:-40}
+      GENERATOR_MAX_SEC: ${GENERATOR_MAX_SEC:-120}
+    deploy: { resources: { limits: { memory: 192m } } }
+
+  web:
+    <<: *limits
+    container_name: shop-sync-web
+    ports: !reset []
+    networks: [default, proxy]
+    deploy: { resources: { limits: { memory: 256m } } }
+
+networks:
+  proxy:
+    name: ${PROXY_NETWORK:-infra_default}
+    external: true
