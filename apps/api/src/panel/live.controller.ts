@@ -1,7 +1,7 @@
 import { Controller, Inject, type MessageEvent, type OnModuleDestroy, Sse } from '@nestjs/common';
 import type { LiveEvent } from '@sas/shared';
 import { Redis } from 'ioredis';
-import { filter, interval, map, merge, Observable } from 'rxjs';
+import { filter, interval, map, merge, Observable, of } from 'rxjs';
 import { Session } from '../auth/auth.guard.js';
 import type { SessionClaims } from '../auth/session-token.js';
 import { APP_CONFIG, type AppConfig } from '../config/env.js';
@@ -35,7 +35,9 @@ export class LiveController implements OnModuleDestroy {
     );
     // proxies close idle streams; a ping every 25 s keeps it open
     const ping = interval(25_000).pipe(map((): MessageEvent => ({ type: 'ping', data: '' })));
-    return merge(live, ping);
+    // headers only leave with the first write; send one right away so the browser marks the stream open
+    const ready = of<MessageEvent>({ type: 'ready', data: '' });
+    return merge(ready, live, ping);
   }
 
   async onModuleDestroy(): Promise<void> {
