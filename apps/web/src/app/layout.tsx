@@ -1,18 +1,11 @@
 import type { Metadata, Viewport } from 'next';
-import { Golos_Text, JetBrains_Mono } from 'next/font/google';
 import type { ReactNode } from 'react';
 import { getLocale, getTheme } from '@/lib/server';
+// self-hosted, so builds never depend on reaching Google Fonts
+import '@fontsource-variable/golos-text';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/500.css';
 import './globals.css';
-
-const golos = Golos_Text({ subsets: ['latin', 'cyrillic'], variable: '--font-golos', display: 'swap' });
-const mono = JetBrains_Mono({
-  subsets: ['latin', 'cyrillic'],
-  variable: '--font-jetbrains',
-  display: 'swap',
-  weight: ['400', '500'],
-  // only payloads and ids use it, none of that is above the fold
-  preload: false,
-});
 
 export const metadata: Metadata = {
   title: { default: 'Shop ↔ accounting sync', template: '%s · Shop sync' },
@@ -31,12 +24,7 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const [locale, theme] = await Promise.all([getLocale(), getTheme()]);
   return (
-    <html
-      lang={locale}
-      data-theme={theme === 'system' ? undefined : theme}
-      className={`${golos.variable} ${mono.variable}`}
-      suppressHydrationWarning
-    >
+    <html lang={locale} data-theme={theme === 'system' ? undefined : theme} suppressHydrationWarning>
       <body className="min-h-dvh font-sans text-[15px] leading-6">{children}</body>
     </html>
   );
