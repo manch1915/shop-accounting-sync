@@ -1,5 +1,24 @@
 name: shop-accounting-sync
 
+# docker compose up --build    -> dashboard on http://localhost:3000, sandbox on :4010
+# docker compose up postgres redis   -> just the databases for local development
+
+x-app-env: &app-env
+  NODE_ENV: production
+  DATABASE_URL: postgresql://sync:sync@postgres:5432/sync
+  REDIS_URL: redis://redis:6379
+  ENCRYPTION_KEY: ${ENCRYPTION_KEY:?set ENCRYPTION_KEY in .env}
+  SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env}
+  DEMO_ENABLED: ${DEMO_ENABLED:-true}
+  DEMO_ALLOW_ACTIONS: ${DEMO_ALLOW_ACTIONS:-true}
+  WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
+  PUBLIC_API_URL: http://api:4000
+  TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+  TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+  SANDBOX_URL: http://sandbox:4010
+  SANDBOX_PUBLIC_URL: ${SANDBOX_PUBLIC_URL:-http://localhost:4010}
+  SANDBOX_TOKEN: ${SANDBOX_TOKEN:-sandbox-demo-token}
+
 services:
   postgres:
     image: postgres:17-alpine
@@ -19,14 +38,79 @@ services:
 
   redis:
     image: redis:7.4.5-alpine
-    command: ["redis-server", "--maxmemory-policy", "noeviction"]
+    # BullMQ needs keys to stay put under memory pressure
+    command: ["redis-server", "--maxmemory-policy", "noeviction", "--appendonly", "yes"]
     ports:
       - "127.0.0.1:6380:6379"
+    volumes:
+      - redisdata:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 10
 
+  migrate:
+    build: { context: ., target: api }
+    image: shop-accounting-sync-api
+    environment: *app-env
+    command: ["sh", "-c", "npx prisma migrate deploy && npx tsx prisma/seed.ts --if-empty"]
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: "no"
+
+  api:
+    image: shop-accounting-sync-api
+    environment:
+      <<: *app-env
+      APP_ROLE: api
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    restart: unless-stopped
+
+  worker:
+    image: shop-accounting-sync-api
+    environment:
+      <<: *app-env
+      APP_ROLE: worker
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+    restart: unless-stopped
+
+  sandbox:
+    build: { context: ., target: sandbox }
+    environment:
+      SANDBOX_PORT: 4010
+      SANDBOX_TOKEN: ${SANDBOX_TOKEN:-sandbox-demo-token}
+      SANDBOX_PUBLIC_URL: ${SANDBOX_PUBLIC_URL:-http://localhost:4010}
+      SANDBOX_WEBHOOK_TARGET: http://api:4000
+      SANDBOX_FAULT_RATE: ${SANDBOX_FAULT_RATE:-0.06}
+      DEMO_GENERATOR: ${DEMO_GENERATOR:-true}
+    ports:
+      - "127.0.0.1:4010:4010"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      target: web
+      args:
+        API_INTERNAL_URL: http://api:4000
+    environment:
+      API_INTERNAL_URL: http://api:4000
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      api: { condition: service_healthy }
+    restart: unless-stopped
+
 volumes:
   pgdata:
+  redisdata:
