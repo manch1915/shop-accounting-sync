@@ -8,8 +8,6 @@ const config: NextConfig = {
   output: 'standalone',
   // trace from the monorepo root so workspace packages end up in the standalone build
   outputFileTracingRoot: fileURLToPath(new URL('../../', import.meta.url)),
-  // gzip would buffer the live event stream; Caddy compresses in production
-  compress: false,
   poweredByHeader: false,
   async rewrites() {
     return [{ source: '/api/:path*', destination: `${api}/api/:path*` }];
