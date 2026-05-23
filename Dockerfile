@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1.7
 # One build for the whole monorepo; pick the service with --target api | web | sandbox.
 
 FROM node:22-alpine AS base
