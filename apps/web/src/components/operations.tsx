@@ -94,7 +94,10 @@ export function OperationRows({
                 <span className={clsx(compact ? 'sm:hidden' : 'md:hidden')}>
                   <StatusBadge status={op.status} label={t.status[op.status]} />
                 </span>
-                <time dateTime={op.createdAt}>{relative(op.createdAt, locale, now)}</time>
+                {/* relative time differs by a few seconds between server and browser render */}
+                <time dateTime={op.createdAt} suppressHydrationWarning>
+                  {relative(op.createdAt, locale, now)}
+                </time>
               </span>
             </Link>
           </li>
