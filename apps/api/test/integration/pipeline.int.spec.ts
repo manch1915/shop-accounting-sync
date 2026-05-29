@@ -129,6 +129,16 @@ beforeAll(async () => {
       settings: { refPrefix: `t${RUN}` },
     },
   });
+
+  // a fresh integration starts with a catalog refresh; it links items whose SKU differs between
+  // the shop and accounting by barcode, which orders may contain
+  const { SchedulerService } = await import('../../src/sync/scheduler.service.js');
+  await app.get(SchedulerService).fire({ integrationId: IDS.integration, type: 'catalog.refresh' });
+  await waitFor(() =>
+    prisma.operation.findFirst({
+      where: { integrationId: IDS.integration, type: 'catalog.refresh', status: 'succeeded' },
+    }),
+  );
 }, 60_000);
 
 afterAll(async () => {
