@@ -28,7 +28,10 @@ services:
 
   sandbox:
     <<: *limits
+    container_name: shop-sync-sandbox
     ports: !reset []
+    # only its status page is published (see docs/deploy.md), the emulated APIs stay internal
+    networks: [default, proxy]
     environment:
       # a calmer pace than local development, the demo runs around the clock
       GENERATOR_MIN_SEC: ${GENERATOR_MIN_SEC:-40}

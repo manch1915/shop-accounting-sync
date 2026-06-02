@@ -18,6 +18,7 @@ x-app-env: &app-env
   SANDBOX_URL: http://sandbox:4010
   SANDBOX_PUBLIC_URL: ${SANDBOX_PUBLIC_URL:-http://localhost:4010}
   SANDBOX_TOKEN: ${SANDBOX_TOKEN:-sandbox-demo-token}
+  SEED_OWNER_PASSWORD: ${SEED_OWNER_PASSWORD:-}
 
 services:
   postgres:

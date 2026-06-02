@@ -21,14 +21,17 @@
     "@nestjs/platform-express": "12.2.0",
     "@prisma/adapter-pg": "7.10.1",
     "@prisma/client": "7.10.1",
+    "@sas/demo-data": "*",
     "@sas/shared": "*",
     "bullmq": "6.3.17",
     "cookie-parser": "1.4.7",
     "dotenv": "18.0.8",
     "ioredis": "5.11.1",
     "pg": "8.23.1",
+    "prisma": "7.10.1",
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.2",
+    "tsx": "4.23.15",
     "zod": "4.6.7"
   },
   "devDependencies": {
@@ -41,11 +44,8 @@
     "@types/supertest": "7.2.1",
     "concurrently": "^10.0.6",
     "msw": "3.0.3",
-    "prisma": "7.10.1",
     "supertest": "7.3.1",
-    "tsx": "4.23.15",
     "unplugin-swc": "2.0.0",
-    "vitest": "5.0.5",
-    "@sas/demo-data": "*"
+    "vitest": "5.0.5"
   }
 }

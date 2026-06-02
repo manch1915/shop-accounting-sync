@@ -1,0 +1,23 @@
+
+# sync.narcisbin.com — демо shop-accounting-sync (добавлено 2026-10-20)
+# До появления DNS блок работает по HTTP; deploy/enable-https.sh переключает его на HTTPS.
+http://sync.narcisbin.com {
+	encode zstd gzip
+	# only the sandbox status page; its APIs and /connections stay inside Docker
+	handle /sandbox/ {
+		rewrite * /
+		reverse_proxy shop-sync-sandbox:4010
+	}
+	handle {
+		reverse_proxy shop-sync-web:3000 {
+			# the live feed is a long-lived event stream
+			flush_interval -1
+		}
+	}
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		X-Frame-Options DENY
+		X-Robots-Tag noindex
+	}
+}
