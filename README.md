@@ -2,6 +2,8 @@
 
 An integration service that connects an online store to an accounting and inventory system. Orders from WooCommerce and Shopify become documents in МойСклад and Xero, payments are recorded against them, and stock levels and prices flow back to the store. Every step is logged with its request and response, failures explain themselves in plain words, and anything can be retried with one click.
 
+**Live demo:** <https://sync.narcisbin.com>, press *Open the live demo*. No sign-up; new orders arrive about once a minute.
+
 ![Overview: two shops, order volume, sync time and a live feed](docs/screenshots/overview-desktop.png)
 
 ## Why it exists

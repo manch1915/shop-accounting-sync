@@ -9,6 +9,16 @@ The demo runs as one Docker Compose project behind an existing Caddy. Postgres, 
 - About 1.7 GB of RAM in total with the limits from `compose.prod.yaml`
 - A DNS record for the dashboard host, for example `sync.example.com`
 
+## The demo server
+
+The public demo runs this way on a shared VPS. `deploy/` holds what was used there:
+
+- `server-setup.sh` writes `.env` with secrets generated on the server, then starts the stack from prebuilt images;
+- `caddy-sync.caddy` and `caddy-add.sh` append the site block to the shared Caddyfile, validate and reload;
+- `enable-https.sh` switches the block from plain HTTP to automatic HTTPS once the DNS record resolves. Adding an HTTPS site before DNS exists makes Caddy back off from Let's Encrypt for a long time, so the block starts as `http://`.
+
+The images were built elsewhere and loaded with `docker save | gzip | ssh server 'gunzip | docker load'`, so the server never needed the build cache.
+
 ## Steps
 
 1. Copy the sources to the server. Without giving the server access to the repository:
