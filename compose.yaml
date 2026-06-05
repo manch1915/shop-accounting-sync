@@ -104,6 +104,7 @@ services:
       target: web
       args:
         API_INTERNAL_URL: http://api:4000
+        SANDBOX_INTERNAL_URL: http://sandbox:4010
     environment:
       API_INTERNAL_URL: http://api:4000
     ports:

@@ -6,7 +6,8 @@ CF=/opt/policy-gateway/infra/caddy/Caddyfile
 CADDY=infra-caddy-1
 BACKUP=""
 
-if ! grep -q 'sync.narcisbin.com' "$CF"; then
+# anchored: a plain substring match also hits supplier-sync.narcisbin.com
+if ! grep -Eq '^(http://)?sync[.]narcisbin[.]com [{]' "$CF"; then
   BACKUP="$CF.bak.$(date +%F-%H%M%S)"
   cp "$CF" "$BACKUP"
   cat /opt/shop-sync/deploy/caddy-sync.caddy >> "$CF"

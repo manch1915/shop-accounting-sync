@@ -50,7 +50,12 @@ export function createSandbox(config: SandboxConfig, overrides: SandboxOverrides
     }),
   );
   // ready-made connection settings for the API seed
-  app.get('/connections', (c) => c.json(connectionSettings(config)));
+  // carries the sandbox token, so it answers only to someone who already has it
+  app.get('/connections', (c) =>
+    c.req.header('x-sandbox-token') === config.token
+      ? c.json(connectionSettings(config))
+      : c.json({ message: 'Send the sandbox token in X-Sandbox-Token' }, 401),
+  );
 
   app.route(SANDBOX_PATHS.woocommerce, wooCommerceApp(state, config.token));
   app.route(SANDBOX_PATHS.shopify, shopifyApp(state, config.token));
