@@ -19,8 +19,8 @@ FROM manifests AS deps
 RUN npm ci --ignore-scripts
 
 FROM deps AS build
-ARG API_INTERNAL_URL=http://api:4000
-ARG SANDBOX_INTERNAL_URL=http://sandbox:4010
+ARG API_INTERNAL_URL=http://shop-sync-api:4000
+ARG SANDBOX_INTERNAL_URL=http://shop-sync-sandbox:4010
 ENV API_INTERNAL_URL=$API_INTERNAL_URL SANDBOX_INTERNAL_URL=$SANDBOX_INTERNAL_URL NEXT_TELEMETRY_DISABLED=1
 # prisma.config.ts reads it; generating the client never connects
 ENV DATABASE_URL=postgresql://build:build@localhost:5432/build

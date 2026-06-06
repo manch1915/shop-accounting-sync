@@ -62,6 +62,10 @@ services:
 
   api:
     image: shop-accounting-sync-api
+    # unique names: the dashboard can share a proxy network with other projects' "api" services
+    networks:
+      default:
+        aliases: [shop-sync-api]
     environment:
       <<: *app-env
       APP_ROLE: api
@@ -87,6 +91,9 @@ services:
 
   sandbox:
     build: { context: ., target: sandbox }
+    networks:
+      default:
+        aliases: [shop-sync-sandbox]
     environment:
       SANDBOX_PORT: 4010
       SANDBOX_TOKEN: ${SANDBOX_TOKEN:-sandbox-demo-token}
@@ -103,10 +110,10 @@ services:
       context: .
       target: web
       args:
-        API_INTERNAL_URL: http://api:4000
-        SANDBOX_INTERNAL_URL: http://sandbox:4010
+        API_INTERNAL_URL: http://shop-sync-api:4000
+        SANDBOX_INTERNAL_URL: http://shop-sync-sandbox:4010
     environment:
-      API_INTERNAL_URL: http://api:4000
+      API_INTERNAL_URL: http://shop-sync-api:4000
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:

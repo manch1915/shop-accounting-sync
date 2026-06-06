@@ -13,6 +13,8 @@ const config: NextConfig = {
   async rewrites() {
     return [
       { source: '/api/:path*', destination: `${api}/api/:path*` },
+      // providers post here; the body passes through untouched, so signatures still verify
+      { source: '/webhooks/:path*', destination: `${api}/webhooks/:path*` },
       // the sandbox status page only; its emulated APIs stay on the internal network
       { source: '/sandbox', destination: `${sandbox}/` },
     ];
